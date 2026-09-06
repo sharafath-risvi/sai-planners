@@ -115,7 +115,7 @@ export default function AboutOverview() {
           <div className="w-full md:w-[55%] lg:w-[60%] h-[40vh] md:h-[80vh] relative z-10 flex items-center justify-end">
             <div className="relative w-full md:w-[90%] h-full overflow-hidden bg-brand-soft-grey rounded-2xl md:rounded-[3rem] shadow-2xl">
               <img 
-                src="/images/img1.JPG" 
+                src="/images/img1.webp" 
                 alt="Sai Planners Overview" 
                 className="story-image absolute inset-0 w-full h-full object-cover scale-[1.15] origin-center"
               />

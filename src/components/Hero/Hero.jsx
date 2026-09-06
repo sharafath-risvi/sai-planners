@@ -12,7 +12,7 @@ export default function Hero() {
   // Keep GSAP timeline fixed to 225 frames for consistent animation timings
   const frameCount = 225; 
 
-  const globFrames1 = import.meta.glob('/public/heroforhome/*.{png,jpg,jpeg,webp}');
+  const globFrames1 = import.meta.glob('/public/heroforhomeframeswebp/*.webp');
   const allFrameUrls1 = Object.keys(globFrames1)
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
     .map(path => path.replace(/^\/public/, ''));

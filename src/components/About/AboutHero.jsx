@@ -71,7 +71,7 @@ export default function AboutHero() {
       <div className="absolute inset-0 w-full h-[120%] -top-[10%]">
         <img 
           ref={imgRef}
-          src="/images/img2.JPG" 
+          src="/images/img2.webp" 
           alt="Sai Planners Architectural Hero" 
           className="w-full h-full object-cover"
         />
