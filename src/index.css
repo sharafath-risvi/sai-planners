@@ -1,0 +1,177 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-body bg-brand-soft-grey text-brand-dark-grey antialiased overflow-x-hidden;
+    font-weight: 400;
+    line-height: 1.65;
+  }
+  
+  /* Global heading defaults */
+  h1, h2 {
+    @apply font-display uppercase tracking-wide;
+    font-feature-settings: "kern" 1, "liga" 1;
+  }
+  h3, h4, h5, h6 {
+    @apply font-body font-medium;
+    font-feature-settings: "kern" 1, "liga" 1;
+  }
+  
+  /* Global button typography */
+  button, 
+  [role="button"],
+  .btn,
+  a[class*="btn"],
+  a[class*="px-10 py-5"],
+  a[class*="px-8 py-5"] {
+    @apply font-mono font-bold uppercase tracking-widest;
+  }
+
+  /* Lenis recommended reset */
+  html.lenis, html.lenis body {
+    height: auto;
+  }
+
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+
+  .lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+
+  .lenis.lenis-smooth iframe {
+    pointer-events: none;
+  }
+}
+
+/* ================================================
+   SAI PLANNERS — GLOBAL TYPOGRAPHY SYSTEM
+   ================================================ */
+@layer components {
+
+  /* ── HERO H1: Cinematic page openers ── */
+  .typo-hero {
+    font-family: 'Bebas Neue', sans-serif;
+    font-weight: 400;
+    font-size: clamp(3rem, 8vw, 8rem);
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  /* ── DISPLAY H2: Major section headings ── */
+  .typo-display {
+    font-family: 'Bebas Neue', sans-serif;
+    font-weight: 400;
+    font-size: clamp(2.25rem, 5vw, 5rem);
+    line-height: 0.95;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  /* ── SECTION H2: Sub-section headings ── */
+  .typo-section {
+    font-family: 'Bebas Neue', sans-serif;
+    font-weight: 400;
+    font-size: clamp(1.75rem, 3.5vw, 3.5rem);
+    line-height: 1.05;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  /* ── SUBHEAD H3: Card/panel titles ── */
+  .typo-subhead {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: clamp(1.5rem, 3vw, 2.75rem);
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+  }
+
+  /* ── EYEBROW: Section taglines / labels ── */
+  .typo-eyebrow {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    line-height: 1.0;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* ── BODY: Comfortable paragraph text ── */
+  .typo-body {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: clamp(1rem, 1.5vw, 1.2rem);
+    line-height: 1.65;
+    letter-spacing: 0.01em;
+  }
+
+  /* ── CTA LABEL: Button / link labels ── */
+  .typo-cta {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 0.7rem;
+    line-height: 1.0;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+
+/* Custom Cursor Styles */
+.custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: theme('colors.brand-navy');
+  pointer-events: none;
+  z-index: 9999;
+  mix-blend-mode: difference;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s, background-color 0.3s;
+}
+
+.custom-cursor.hovering {
+  width: 60px;
+  height: 60px;
+  background-color: theme('colors.brand-gold');
+  mix-blend-mode: normal;
+}
+
+/* ================================================
+   INFINITE MARQUEE ANIMATIONS
+   ================================================ */
+@keyframes marqueeLeft {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-33.333333%); }
+}
+
+@keyframes marqueeRight {
+  0% { transform: translateX(-33.333333%); }
+  100% { transform: translateX(0); }
+}
+
+.animate-marquee-left {
+  animation: marqueeLeft 60s linear infinite;
+}
+
+.animate-marquee-right {
+  animation: marqueeRight 60s linear infinite;
+}
