@@ -77,8 +77,8 @@ export default function Services() {
   const canvasRef = useRef(null);
   
   // Dynamically detect all frames at build/runtime using Vite
-  const glob1 = import.meta.glob('/public/serviceoneframes/*.png');
-  const glob2 = import.meta.glob('/public/servicetwoframes/*.png');
+  const glob1 = import.meta.glob('/public/serviceoneframeswebp/*.webp');
+  const glob2 = import.meta.glob('/public/servicetwoframeswebp/*.webp');
 
   const getSortedUrls = (globObj) => {
     return Object.keys(globObj)
