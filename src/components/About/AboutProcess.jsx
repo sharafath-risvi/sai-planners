@@ -9,13 +9,13 @@ const PROCESS_STAGES = [
     num: "01", 
     title: "SITE", 
     desc: "Comprehensive site assessment and context analysis.",
-    img: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069"
+    img: "/why_choose_us/empty_land.PNG"
   },
   { 
     num: "02", 
     title: "STRATEGY", 
     desc: "Structuring the precise planning strategy.",
-    img: "https://images.unsplash.com/photo-1479839672679-a46483c0e7c8?q=80&w=2070"
+    img: "/why_choose_us/planning_startegy.PNG"
   },
   { 
     num: "03", 
@@ -27,25 +27,25 @@ const PROCESS_STAGES = [
     num: "04", 
     title: "APPROVAL DRAWINGS", 
     desc: "Preparation of regulatory approval drawings.",
-    img: "https://images.unsplash.com/photo-1503694978374-8a2fb5a0fa06?q=80&w=2070"
+    img: "/why_choose_us/approval_drawings.PNG"
   },
   { 
     num: "05", 
     title: "DOCUMENTATION", 
     desc: "Rigorous documentation and filing.",
-    img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070"
+    img: "/why_choose_us/documentation_process.jpg"
   },
   { 
     num: "06", 
     title: "AUTHORITY LIAISON", 
     desc: "Managing submissions with statutory authorities.",
-    img: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=2070"
+    img: "/why_choose_us/authority_liason.PNG"
   },
   { 
     num: "07", 
     title: "FOLLOW-UP", 
     desc: "Ensuring clearance to move projects forward.",
-    img: "https://images.unsplash.com/photo-1428366890462-dd4baecf492b?q=80&w=2070"
+    img: "/why_choose_us/follow_up_process.jpg"
   },
 ];
 

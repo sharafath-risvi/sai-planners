@@ -8,14 +8,14 @@ const industries = [
   {
     id: "industrial",
     title: "Industrial Entrepreneurs & Developers",
-    image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070",
-    smallImage: "https://images.unsplash.com/photo-1581094288338-2314dddb7ece?q=80&w=2070"
+    image: "/why_choose_us/industrial_entrepreneurs_developers.PNG",
+    smallImage: "/why_choose_us/industrial_entrepreneurs_developers.PNG"
   },
   {
     id: "commercial",
     title: "Commercial Properties",
-    image: "https://images.unsplash.com/photo-1431540015161-0bf868a2d407?q=80&w=2070",
-    smallImage: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070"
+    image: "/why_choose_us/commercial_buildind.PNG",
+    smallImage: "/why_choose_us/commercial_buildind.PNG"
   },
   {
     id: "education",
@@ -238,13 +238,12 @@ export default function IndustriesGridMorphSection() {
         {/* ================= PANEL 1: GRID MORPHING STAGE (100vw) ================= */}
         <div className="panel-1 relative w-screen h-screen shrink-0 border-r border-[#282D7F]/10">
           
-          <div className="intro-text-who absolute top-[25%] left-1/2 -translate-x-1/2 z-10">
-            <span className="typo-eyebrow text-brand-gold">WHO WE SERVE</span>
-          </div>
-          <div className="intro-text-title absolute top-[30%] left-1/2 -translate-x-1/2 text-center w-full max-w-[90vw] md:max-w-6xl z-10">
-            <h2 className="font-display font-bold text-[12vw] md:text-7xl lg:text-[7.5rem] xl:text-[9rem] tracking-wide uppercase text-[#282D7F] leading-[0.9] mb-8 drop-shadow-sm whitespace-nowrap md:whitespace-normal">
-              INDUSTRIES <span className="text-[#FCAE16] italic font-normal">&</span> CLIENTS
+          <div className="intro-text-who absolute top-[20%] left-1/2 -translate-x-1/2 z-10 text-center w-full max-w-[90vw] md:max-w-6xl">
+            <h2 className="font-display font-bold text-[12vw] md:text-7xl lg:text-[7.5rem] xl:text-[9rem] tracking-wide uppercase text-[#282D7F] leading-[0.9] drop-shadow-sm whitespace-nowrap md:whitespace-normal">
+              WHO WE SERVE
             </h2>
+          </div>
+          <div className="intro-text-title absolute top-[45%] left-1/2 -translate-x-1/2 text-center w-full max-w-[90vw] md:max-w-6xl z-10">
             <p className="typo-body text-[#282D7F]/80 max-w-2xl mx-auto">
               Strategic planning expertise for industries, institutions, developers, and businesses shaping the spaces of tomorrow.
             </p>

@@ -59,7 +59,7 @@ export default function AboutVision() {
       {/* Background Image */}
       <div className="absolute inset-0 w-full h-full pointer-events-none z-0">
         <img 
-          src="https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=2144" 
+          src="/images/img3.webp" 
           alt="Cityscape" 
           className="vision-bg absolute inset-0 w-full h-full object-cover grayscale mix-blend-overlay scale-[1.05]"
         />

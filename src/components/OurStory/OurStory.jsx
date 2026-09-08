@@ -132,6 +132,8 @@ export default function OurStory() {
 
             <p className="typo-body text-brand-dark-grey font-light">
               SAI PLANNERS is a premier planning, engineering, and regulatory consultancy focused on helping clients develop projects with absolute clarity. From master site assessment and compliant drawings to authority liaison, we manage the entire lifecycle with precision and commitment.
+              <br /><br />
+              We are a planning and regulatory consulting firm specializing in land development, building approvals, layout approvals, land reclassification, industrial approvals, and statutory compliances. We help landowners, developers, businesses, and industries navigate complex approval processes and transform ideas into approved, executable projects.
             </p>
           </div>
 

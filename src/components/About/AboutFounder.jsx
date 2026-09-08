@@ -103,9 +103,9 @@ export default function AboutFounder() {
           <div className="founder-img-wrapper w-full md:w-[45%] relative">
             <div className="aspect-[3/4] md:aspect-[4/5] overflow-hidden rounded-[2px] shadow-2xl relative">
               <img 
-                src="https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=2070" 
-                alt="Founder Portrait Placeholder" 
-                className="founder-img absolute inset-0 w-full h-[115%] -top-[7.5%] object-cover grayscale mix-blend-multiply opacity-90"
+                src="/founders/founder1.jpg" 
+                alt="Mr. R Ravi" 
+                className="founder-img absolute inset-0 w-full h-[115%] -top-[7.5%] object-cover"
               />
               <div className="absolute inset-0 bg-brand-navy/5 mix-blend-overlay pointer-events-none" />
               {/* Thin Inner Border */}
@@ -127,31 +127,17 @@ export default function AboutFounder() {
                 OUR FOUNDER
               </h4>
               <h2 className="typo-display text-brand-navy mb-3">
-                [Founder Name]
+                Mr. R Ravi
               </h2>
               <p className="typo-eyebrow text-brand-navy/50">
-                [Founder Title / Credentials]
+                Founder
               </p>
             </div>
 
             <div className="space-y-6 typo-body text-brand-navy/80 font-light">
               <p>
-                [Placeholder: A sophisticated opening statement about the founder's vision, highlighting their deep architectural or planning expertise. This paragraph should establish credibility and set the premium tone.]
+                Sai Planners is built on the legacy of Mr. R Ravi, who has decades of experience in regulatory approvals, project facilitation, and government liaison services. His commitment to trust, reliability, and client success laid the foundation for the firm.
               </p>
-              <p>
-                [Placeholder: Details about their award-winning experience, strategic approach to complex regulatory environments, or major milestones achieved in the industry. Keep the tone editorial and authoritative.]
-              </p>
-            </div>
-            
-            <div className="mt-12 pt-8 border-t border-brand-navy/10 flex gap-12">
-              <div>
-                <span className="block typo-display text-brand-navy" style={{fontWeight:600}}>[XX]+</span>
-                <span className="typo-eyebrow text-brand-navy/50 mt-2 block">Years Exp.</span>
-              </div>
-              <div>
-                <span className="block typo-display text-brand-navy" style={{fontWeight:600}}>[XXX]+</span>
-                <span className="typo-eyebrow text-brand-navy/50 mt-2 block">Projects</span>
-              </div>
             </div>
 
           </div>
@@ -165,9 +151,9 @@ export default function AboutFounder() {
           <div className="founder2-img-wrapper w-full md:w-[45%] relative">
             <div className="aspect-[3/4] md:aspect-[4/5] overflow-hidden rounded-[2px] shadow-2xl relative">
               <img 
-                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=2070" 
-                alt="Founder 2 Portrait Placeholder" 
-                className="founder2-img absolute inset-0 w-full h-[115%] -top-[7.5%] object-cover grayscale mix-blend-multiply opacity-90"
+                src="/founders/founder2.jpg" 
+                alt="Mohana Krishnaa" 
+                className="founder2-img absolute inset-0 w-full h-[115%] -top-[7.5%] object-cover"
               />
               <div className="absolute inset-0 bg-brand-navy/5 mix-blend-overlay pointer-events-none" />
               {/* Thin Inner Border */}
@@ -185,34 +171,20 @@ export default function AboutFounder() {
             <div className="mb-10 relative">
               
               <h4 className="typo-eyebrow text-brand-gold mb-4">
-                CO-FOUNDER
+                LEADERSHIP
               </h4>
               <h2 className="typo-display text-brand-navy mb-3">
-                [Founder 2 Name]
+                Mohana Krishnaa
               </h2>
               <p className="typo-eyebrow text-brand-navy/50">
-                [Founder 2 Title / Credentials]
+                Leadership
               </p>
             </div>
 
             <div className="space-y-6 typo-body text-brand-navy/80 font-light">
               <p>
-                [Placeholder: A sophisticated opening statement about the second founder's vision, highlighting their deep architectural or planning expertise. This paragraph should establish credibility and set the premium tone.]
+                The legacy is carried forward by his son, Mohana Krishnaa, who has been actively involved in the business for over 3 years, combining modern management practices with hands-on expertise in planning, approvals, and compliance to serve clients across Tamil Nadu.
               </p>
-              <p>
-                [Placeholder: Details about their award-winning experience, strategic approach to complex regulatory environments, or major milestones achieved in the industry. Keep the tone editorial and authoritative.]
-              </p>
-            </div>
-            
-            <div className="mt-12 pt-8 border-t border-brand-navy/10 flex gap-12">
-              <div>
-                <span className="block typo-display text-brand-navy" style={{fontWeight:600}}>[XX]+</span>
-                <span className="typo-eyebrow text-brand-navy/50 mt-2 block">Years Exp.</span>
-              </div>
-              <div>
-                <span className="block typo-display text-brand-navy" style={{fontWeight:600}}>[XXX]+</span>
-                <span className="typo-eyebrow text-brand-navy/50 mt-2 block">Projects</span>
-              </div>
             </div>
 
           </div>

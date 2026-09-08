@@ -9,13 +9,13 @@ const stories = [
     num: "01",
     title: "SITE ASSESSMENT",
     desc: "Understanding land, context and development potential.",
-    img: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069"
+    img: "/why_choose_us/empty_land.PNG"
   },
   {
     num: "02",
     title: "PLANNING STRATEGY",
     desc: "Crafting strategies aligned with regulations, planning requirements and project goals.",
-    img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070"
+    img: "/why_choose_us/planning_startegy.PNG"
   },
   {
     num: "03",
@@ -27,13 +27,13 @@ const stories = [
     num: "04",
     title: "APPROVAL DRAWINGS",
     desc: "Preparing accurate, approval-ready documentation.",
-    img: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=2070"
+    img: "/why_choose_us/approval_drawings.PNG"
   },
   {
     num: "05",
     title: "AUTHORITY LIAISON",
     desc: "Liaising with authorities and managing follow-ups for smoother approvals.",
-    img: "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=2070"
+    img: "/why_choose_us/authority_liason.PNG"
   }
 ];
 

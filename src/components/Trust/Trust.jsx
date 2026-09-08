@@ -5,10 +5,10 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 
 const stats = [
-  { label: "VISION", value: "01", suffix: "" },
-  { label: "YEARS EXPERTISE", value: "10", suffix: "+" },
-  { label: "PROJECTS DELIVERED", value: "50", suffix: "+" },
-  { label: "ACRES PLANNED", value: "500", suffix: "+" }
+  { label: "YEARS OF EXPERIENCE", value: "15", suffix: "+" },
+  { label: "PROJECTS COMPLETED", value: "1500", suffix: "+" },
+  { label: "CLIENTS SERVED", value: "700", suffix: "+" },
+  { label: "DISTRICTS COVERED", value: "18", suffix: "+" }
 ];
 
 export default function Trust() {
@@ -68,14 +68,8 @@ export default function Trust() {
                 {stat.label}
               </p>
               <h3 className="typo-display text-brand-navy flex items-baseline" style={{fontWeight:600}}>
-                {stat.value === "01" ? (
-                  <span>{stat.value}</span>
-                ) : (
-                  <>
-                    <span className="stat-value-num">{stat.value}</span>
-                    <span className="text-brand-gold ml-1" style={{fontSize:'0.5em'}}>{stat.suffix}</span>
-                  </>
-                )}
+                <span className="stat-value-num">{stat.value}</span>
+                <span className="text-brand-gold ml-1" style={{fontSize:'0.5em'}}>{stat.suffix}</span>
               </h3>
             </div>
           ))}

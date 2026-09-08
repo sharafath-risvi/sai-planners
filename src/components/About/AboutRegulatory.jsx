@@ -5,11 +5,11 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 
 const SERVICES = [
-  { id: '01', title: 'STATUTORY APPROVALS', src: 'https://images.unsplash.com/photo-1541888081622-482a5fbc40d5?q=80&w=1200' },
+  { id: '01', title: 'STATUTORY APPROVALS', src: '/why_choose_us/approval_drawings.PNG' },
   { id: '02', title: 'PLANNING COMPLIANCE', src: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=1200' },
-  { id: '03', title: 'LIAISON & COORDINATION', src: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200' },
-  { id: '04', title: 'DOCUMENTATION SUPPORT', src: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=1200' },
-  { id: '05', title: 'REGULATORY ADVISORY', src: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=1200' }
+  { id: '03', title: 'LIAISON & COORDINATION', src: '/why_choose_us/authority_liason.PNG' },
+  { id: '04', title: 'DOCUMENTATION SUPPORT', src: '/why_choose_us/planning_startegy.PNG' },
+  { id: '05', title: 'REGULATORY ADVISORY', src: '/why_choose_us/authority_liason.PNG' }
 ];
 
 export default function AboutRegulatory() {
