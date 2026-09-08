@@ -108,13 +108,7 @@ export default function AboutFounder() {
                 className="founder-img absolute inset-0 w-full h-[115%] -top-[7.5%] object-cover"
               />
               <div className="absolute inset-0 bg-brand-navy/5 mix-blend-overlay pointer-events-none" />
-              {/* Thin Inner Border */}
-              <div className="absolute inset-4 border border-brand-navy/10 pointer-events-none" />
             </div>
-            
-            {/* Technical Detail Corner Marks */}
-            <div className="absolute -top-4 -left-4 w-8 h-8 border-t border-l border-brand-navy/30 hidden md:block" />
-            <div className="absolute -bottom-4 -right-4 w-8 h-8 border-b border-r border-brand-navy/30 hidden md:block" />
           </div>
 
           {/* Right: Content */}
@@ -156,13 +150,7 @@ export default function AboutFounder() {
                 className="founder2-img absolute inset-0 w-full h-[115%] -top-[7.5%] object-cover"
               />
               <div className="absolute inset-0 bg-brand-navy/5 mix-blend-overlay pointer-events-none" />
-              {/* Thin Inner Border */}
-              <div className="absolute inset-4 border border-brand-navy/10 pointer-events-none" />
             </div>
-            
-            {/* Technical Detail Corner Marks */}
-            <div className="absolute -top-4 -right-4 w-8 h-8 border-t border-r border-brand-navy/30 hidden md:block" />
-            <div className="absolute -bottom-4 -left-4 w-8 h-8 border-b border-l border-brand-navy/30 hidden md:block" />
           </div>
 
           {/* Left: Founder 2 Content */}

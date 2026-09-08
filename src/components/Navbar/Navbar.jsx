@@ -8,6 +8,7 @@ const navLinks = [
   { name: 'ABOUT', href: '/about' },
   { name: 'SERVICES', href: '/services' },
   { name: 'RESOURCES', href: '/resources' },
+  { name: 'CAREERS', href: '/careers' },
   { name: 'CONTACT', href: '/contact' },
 ];
 
@@ -68,13 +69,13 @@ export default function Navbar() {
             </div>
 
             {/* Desktop Links */}
-            <div className="hidden lg:flex items-center space-x-10 -translate-x-2 lg:-translate-x-6 xl:-translate-x-8">
+            <div className="hidden lg:flex items-center space-x-6 xl:space-x-8 -translate-x-2 lg:-translate-x-4 xl:-translate-x-8">
               {navLinks.map((link) => (
                 <div key={link.name}>
                   {link.href.startsWith('/#') ? (
                     <a
                       href={location.pathname === '/' ? link.href.replace('/', '') : link.href}
-                      className={`text-[15px] md:text-base font-medium tracking-[0.15em] transition-colors hover:text-brand-gold ${
+                      className={`text-[13px] xl:text-[15px] md:text-base font-medium tracking-[0.1em] transition-colors hover:text-brand-gold ${
                         isScrolled ? 'text-white/80' : 'text-white/80'
                       }`}
                     >
@@ -83,7 +84,7 @@ export default function Navbar() {
                   ) : (
                     <Link
                       to={link.href}
-                      className={`text-[15px] md:text-base font-medium tracking-[0.15em] transition-colors hover:text-brand-gold ${
+                      className={`text-[13px] xl:text-[15px] md:text-base font-medium tracking-[0.1em] transition-colors hover:text-brand-gold ${
                         isScrolled ? 'text-white/80' : 'text-white/80'
                       }`}
                     >
@@ -95,10 +96,10 @@ export default function Navbar() {
             </div>
 
             {/* CTA */}
-            <div className="hidden lg:block">
+            <div className="hidden lg:block shrink-0 ml-4">
               <Link 
                 to="/contact" 
-                className="inline-flex items-center justify-center px-8 py-3.5 text-sm font-semibold tracking-widest text-brand-navy bg-brand-gold rounded-full transition-colors duration-300 hover:bg-brand-navy hover:text-white"
+                className="inline-flex items-center justify-center px-5 py-2.5 text-xs xl:text-sm font-semibold tracking-wider text-brand-navy bg-brand-gold rounded-full transition-colors duration-300 hover:bg-brand-navy hover:text-white"
               >
                 GET A CONSULTATION
               </Link>

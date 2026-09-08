@@ -11,6 +11,7 @@ import About from './pages/About/About';
 import Contact from './pages/Contact/Contact';
 import Services from './pages/Services/Services';
 import Resources from './pages/Resources/Resources';
+import Career from './pages/Career/Career';
 
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -79,6 +80,7 @@ function App() {
           <Route path="/services" element={<Services />} />
           <Route path="/resources" element={<Resources />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/careers" element={<Career />} />
         </Routes>
         <Footer />
       </main>

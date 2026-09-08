@@ -14,7 +14,7 @@ export default function Home() {
       <WhyChooseUs />
       <IndustriesGridMorphSection />
       <Clients />
-      <Testimonials />
+      {/* <Testimonials /> */}
       <Trust />
       <CTA />
     </>

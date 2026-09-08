@@ -99,7 +99,7 @@ export default function AboutHero() {
         </div>
 
         <p ref={statementRef} className="font-body text-white/80 font-light tracking-wide max-w-2xl" style={{fontSize:'clamp(1rem,1.8vw,1.4rem)',lineHeight:1.6}}>
-          Planning. Engineering. Regulatory Expertise.
+          Your dream Projects, Our Unwavering Dedication.
         </p>
 
       </div>

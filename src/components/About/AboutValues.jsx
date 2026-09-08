@@ -10,35 +10,35 @@ const VALUES = [
     word: "INTEGRITY", 
     num: "01", 
     desc: "Integrity and honesty at every step of our planning process.",
-    img: "https://images.unsplash.com/photo-1479839672679-a46483c0e7c8?q=80&w=2070"
+    img: "/our_core/integrity.PNG"
   },
   { 
     id: "transparency", 
     word: "TRANSPARENCY", 
     num: "02", 
     desc: "Transparency and clarity guide how we approach every project and relationship.",
-    img: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069"
+    img: "/our_core/transparency.PNG"
   },
   { 
     id: "precision", 
     word: "PRECISION", 
     num: "03", 
     desc: "Technical precision in all documentation, ensuring faultless regulatory compliance.",
-    img: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=2071"
+    img: "/our_core/precision.PNG"
   },
   { 
     id: "knowledge", 
     word: "KNOWLEDGE", 
     num: "04", 
     desc: "Deep regulatory knowledge and foresight to navigate complex statutory frameworks.",
-    img: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=2070"
+    img: "/our_core/knowledge.PNG"
   },
   { 
     id: "responsive", 
     word: "RESPONSIVENESS", 
     num: "05", 
     desc: "Responsive communication with clients, stakeholders, and regulatory authorities.",
-    img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070"
+    img: "/our_core/responsiveness.PNG"
   }
 ];
 

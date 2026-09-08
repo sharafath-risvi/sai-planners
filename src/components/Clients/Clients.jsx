@@ -14,7 +14,6 @@ const clientData = [
   { img: '/client/sical.jpeg', name: 'SICAL', num: '11' },
   { img: '/client/sr.JPG', name: 'SR', num: '12' },
   { img: '/client/sri_krish.JPG', name: 'SRI KRISHNA', num: '13' },
-  { img: '/client/ster.JPG', name: 'STER', num: '14' },
   { img: '/client/traditional_excellencs.JPG', name: 'TRADITIONAL EXCELLENCE', num: '15' }
 ];
 

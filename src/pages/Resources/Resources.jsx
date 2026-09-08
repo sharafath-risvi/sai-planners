@@ -57,6 +57,16 @@ const resources = [
     btnLabel: 'OPEN PORTAL',
     url: 'https://onlineppa.tn.gov.in/',
     img: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&q=80&w=1200'
+  },
+  {
+    id: '06',
+    titleBlack: 'RERA.TN.GOV.IN',
+    titleViolet: '',
+    label: 'TAMIL NADU REAL ESTATE REGULATORY AUTHORITY',
+    desc: 'Access the official Tamil Nadu RERA portal for real estate project registrations and regulatory compliance.',
+    btnLabel: 'VISIT RERA',
+    url: 'https://rera.tn.gov.in/',
+    img: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=1200'
   }
 ];
 

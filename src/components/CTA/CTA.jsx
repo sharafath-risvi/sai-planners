@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { Link } from 'react-router-dom';
 import { ArrowDownRight } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -60,8 +61,8 @@ export default function CTA() {
         
         <div className="flex flex-row items-center justify-center md:justify-start gap-2 md:gap-6 mt-12 w-full md:w-auto px-4 md:px-0">
           
-          <a 
-            href="#" 
+          <Link 
+            to="/contact" 
             className="flex-1 md:flex-none group relative inline-flex items-center justify-center px-2 py-3.5 md:px-10 lg:px-12 md:py-5 text-brand-navy bg-brand-gold rounded-full overflow-hidden transition-all duration-500 hover:shadow-xl hover:shadow-brand-gold/20"
           >
             <div className="absolute inset-0 w-full h-full bg-white translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500 ease-[0.76,0,0.24,1]" />
@@ -69,7 +70,7 @@ export default function CTA() {
               CONSULTATION
               <ArrowDownRight className="w-3 h-3 md:w-5 md:h-5 transition-transform duration-500 group-hover:rotate-[-45deg]" />
             </span>
-          </a>
+          </Link>
 
           <a 
             href="mailto:contact@saiplanners.com" 

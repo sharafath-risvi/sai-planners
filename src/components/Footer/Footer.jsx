@@ -62,9 +62,12 @@ export default function Footer() {
                 <img 
                   src="/logo/logo.png" 
                   alt="Sai Planners" 
-                  className="h-[110px] md:h-[140px] lg:h-[180px] w-auto object-contain opacity-90 hover:opacity-100 transition-all duration-300 origin-left" 
+                  className="h-[110px] md:h-[140px] lg:h-[180px] w-auto object-contain opacity-90 hover:opacity-100 transition-all duration-300 origin-left mb-6" 
                 />
               </Link>
+              <p className="font-body text-[#333333] tracking-wide font-light max-w-sm text-sm">
+                Your dream Projects, Our Unwavering Dedication.
+              </p>
             </div>
           </div>
           
@@ -121,15 +124,16 @@ export default function Footer() {
               </li>
               <li className="overflow-hidden">
                 <div className="footer-reveal">
-                  {isHome ? (
-                    <a href="#expertise-desktop" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
-                      Services <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
-                    </a>
-                  ) : (
-                    <Link to="/#expertise-desktop" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
-                      Services <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
-                    </Link>
-                  )}
+                  <Link to="/services" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
+                    Services <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
+                  </Link>
+                </div>
+              </li>
+              <li className="overflow-hidden">
+                <div className="footer-reveal">
+                  <Link to="/resources" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
+                    Resources <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
+                  </Link>
                 </div>
               </li>
               <li className="overflow-hidden">
@@ -139,43 +143,57 @@ export default function Footer() {
                   </Link>
                 </div>
               </li>
+              <li className="overflow-hidden">
+                <div className="footer-reveal">
+                  <Link to="/careers" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
+                    Careers <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
+                  </Link>
+                </div>
+              </li>
             </ul>
           </div>
 
-          {/* 02 / OUR EXPERTISE */}
+          {/* 02 / SERVICES */}
           <div className="flex flex-col space-y-6 lg:space-y-8">
             <div className="overflow-hidden">
               <h4 className="footer-reveal font-mono text-[10px] tracking-[0.25em] text-black uppercase font-bold mb-2">
-                <span className="text-brand-navy mr-2">02 /</span> OUR EXPERTISE
+                <span className="text-brand-navy mr-2">02 /</span> SERVICES
               </h4>
             </div>
             <ul className="space-y-4 lg:space-y-5 font-sans text-sm lg:text-base font-light text-black">
               <li className="overflow-hidden">
                 <div className="footer-reveal">
-                  <a href="#" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
-                    Statutory Approvals <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
-                  </a>
+                  <Link to="/services" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
+                    DTCP Plan Approvals <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
+                  </Link>
                 </div>
               </li>
               <li className="overflow-hidden">
                 <div className="footer-reveal">
-                  <a href="#" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
-                    Planning Compliance <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
-                  </a>
+                  <Link to="/services" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
+                    CMDA Plan Approvals <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
+                  </Link>
                 </div>
               </li>
               <li className="overflow-hidden">
                 <div className="footer-reveal">
-                  <a href="#" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
-                    Liaison & Coordination <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
-                  </a>
+                  <Link to="/services" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
+                    RERA Approvals & Compliance Support <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
+                  </Link>
                 </div>
               </li>
               <li className="overflow-hidden">
                 <div className="footer-reveal">
-                  <a href="#" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
-                    Regulatory Advisory <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
-                  </a>
+                  <Link to="/services" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
+                    Land Development & Layout Planning <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
+                  </Link>
+                </div>
+              </li>
+              <li className="overflow-hidden">
+                <div className="footer-reveal">
+                  <Link to="/services" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
+                    LPA Plan Approvals <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
+                  </Link>
                 </div>
               </li>
             </ul>
@@ -198,14 +216,28 @@ export default function Footer() {
               </li>
               <li className="overflow-hidden">
                 <div className="footer-reveal">
-                  <Link to="/about#role" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
-                    Our Role <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
+                  <Link to="/about" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
+                    Founders <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
                   </Link>
                 </div>
               </li>
               <li className="overflow-hidden">
                 <div className="footer-reveal">
-                  <Link to="/about#values" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
+                  <Link to="/about" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
+                    Our Role, Process & Expertise <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
+                  </Link>
+                </div>
+              </li>
+              <li className="overflow-hidden">
+                <div className="footer-reveal">
+                  <Link to="/about" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
+                    Mission & Vision <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
+                  </Link>
+                </div>
+              </li>
+              <li className="overflow-hidden">
+                <div className="footer-reveal">
+                  <Link to="/about" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
                     Core Values <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
                   </Link>
                 </div>
@@ -213,7 +245,7 @@ export default function Footer() {
               <li className="overflow-hidden">
                 <div className="footer-reveal">
                   <Link to="/contact" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
-                    Contact <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
+                    Contact Us <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
                   </Link>
                 </div>
               </li>
@@ -230,22 +262,24 @@ export default function Footer() {
             <ul className="space-y-5 lg:space-y-6 font-sans text-[#333333] text-sm lg:text-base font-light">
               <li className="overflow-hidden">
                 <div className="footer-reveal">
-                  <a href="tel:+910000000000" className="text-black hover:text-brand-navy transition-colors inline-block relative">
-                    +91 0000 0000 00
+                  <a href="tel:9383360666" className="text-black hover:text-brand-navy transition-colors inline-block relative">
+                    93833 60666
                   </a>
                 </div>
               </li>
               <li className="overflow-hidden">
                 <div className="footer-reveal">
-                  <a href="mailto:contact@saiplanners.com" className="text-black hover:text-brand-navy transition-colors inline-block relative">
-                    contact@saiplanners.com
+                  <a href="tel:9789071197" className="text-black hover:text-brand-navy transition-colors inline-block relative">
+                    97890 71197
                   </a>
                 </div>
               </li>
               <li className="overflow-hidden">
                 <div className="footer-reveal">
-                  <span className="text-[#333333] cursor-default block max-w-[200px]">
-                    Tamil Nadu, India
+                  <span className="text-[#333333] cursor-default block max-w-[200px] mt-2">
+                    Shop 84,85 JJ Complex<br/>
+                    2nd Floor, Thirumangalam<br/>
+                    Chennai 600 040
                   </span>
                 </div>
               </li>
@@ -262,22 +296,15 @@ export default function Footer() {
             <ul className="space-y-4 lg:space-y-5 font-sans text-sm lg:text-base font-light text-black">
               <li className="overflow-hidden">
                 <div className="footer-reveal">
-                  <a href="#" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
+                  <a href="https://www.instagram.com/we_saiplanners/" target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
                     Instagram <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
                   </a>
                 </div>
               </li>
               <li className="overflow-hidden">
                 <div className="footer-reveal">
-                  <a href="#" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
+                  <a href="https://www.linkedin.com/in/sai-planners-8065b3320/" target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
                     LinkedIn <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
-                  </a>
-                </div>
-              </li>
-              <li className="overflow-hidden">
-                <div className="footer-reveal">
-                  <a href="#" className="group inline-flex items-center gap-3 hover:text-brand-navy transition-all duration-300">
-                    Facebook <span className="text-brand-navy opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
                   </a>
                 </div>
               </li>

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -134,10 +135,10 @@ export default function HeroSequence() {
               transition={{ duration: 0.8, delay: 2.2 }}
               className="flex items-center space-x-6"
             >
-              <a href="#contact" data-cursor="hover" className="inline-flex items-center justify-center px-8 py-4 text-sm font-semibold tracking-widest text-brand-navy bg-brand-gold rounded-full transition-transform hover:scale-105">
+              <Link to="/contact" data-cursor="hover" className="inline-flex items-center justify-center px-8 py-4 text-sm font-semibold tracking-widest text-brand-navy bg-brand-gold rounded-full transition-transform hover:scale-105">
                 GET A CONSULTATION
-              </a>
-              <a href="#contact" data-cursor="hover" className="text-sm font-medium tracking-widest uppercase hover:text-brand-gold transition-colors">
+              </Link>
+              <a href="tel:9383360666" data-cursor="hover" className="text-sm font-medium tracking-widest uppercase hover:text-brand-gold transition-colors">
                 TALK TO US
               </a>
             </motion.div>
