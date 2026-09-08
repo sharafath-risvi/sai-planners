@@ -6,67 +6,59 @@ import CTA from '../../components/CTA/CTA';
 gsap.registerPlugin(ScrollTrigger);
 
 const FormField = ({ label, num, type = "text", placeholder }) => {
-  const inputClasses = "w-full bg-transparent border-b border-white/20 py-3 text-white font-body text-base outline-none transition-all placeholder:text-white/30 rounded-none focus:border-brand-gold focus:bg-white/[0.03]";
+  const inputClasses = "w-full bg-[#FCFCFC] border border-[#0A0A0A]/15 rounded-md py-3.5 px-4 text-[#0A0A0A] font-sans text-base outline-none transition-all placeholder:text-[#0A0A0A]/30 focus:border-brand-navy focus:ring-1 focus:ring-brand-navy/20 focus:bg-white";
   
   return (
-    <div className="relative group flex items-start gap-4">
-      {num && (
-        <span className="font-mono text-[10px] text-brand-gold/60 pt-4 transition-colors group-focus-within:text-brand-gold font-bold">
-          {num}
-        </span>
+    <div className="flex flex-col gap-2 w-full">
+      <label className="text-xs font-sans text-[#0A0A0A]/80 font-bold uppercase tracking-wide">
+        {label}
+      </label>
+      {type === "textarea" ? (
+        <textarea 
+          placeholder={placeholder}
+          className={`${inputClasses} resize-none h-32`}
+        />
+      ) : type === "select" ? (
+        <select 
+          defaultValue=""
+          className={`${inputClasses} appearance-none cursor-pointer`}
+        >
+          <option value="" disabled className="text-[#0A0A0A]/30">{placeholder}</option>
+          {label === "Project Type" && (
+            <>
+              <option value="residential">Residential Layout</option>
+              <option value="commercial">Commercial Building</option>
+              <option value="industrial">Industrial Facility</option>
+              <option value="warehouse">Warehouse / Logistics</option>
+              <option value="institutional">Institutional</option>
+              <option value="other">Other</option>
+            </>
+          )}
+          {label === "Service Required" && (
+            <>
+              <option value="dtcp">DTCP, CMDA & LPA Plan Approvals</option>
+              <option value="rera">RERA Approvals & Compliance</option>
+              <option value="layout">Land Development & Layout Planning</option>
+              <option value="engineering">Industrial Engineering & Planning</option>
+              <option value="clearance">Statutory & Environmental Clearances</option>
+              <option value="other">Other</option>
+            </>
+          )}
+          {label === "Preferred Contact Method" && (
+            <>
+              <option value="phone">Phone Call</option>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="email">Email</option>
+            </>
+          )}
+        </select>
+      ) : (
+        <input 
+          type={type} 
+          placeholder={placeholder}
+          className={inputClasses}
+        />
       )}
-      <div className="flex-1 relative">
-        <label className="block text-[10px] font-mono tracking-widest text-white/50 uppercase mb-1 transition-all duration-300 group-focus-within:text-brand-gold group-focus-within:-translate-y-1">
-          {label}
-        </label>
-        {type === "textarea" ? (
-          <textarea 
-            placeholder={placeholder}
-            className={`${inputClasses} resize-none h-24`}
-          />
-        ) : type === "select" ? (
-          <select 
-            defaultValue=""
-            className={`${inputClasses} appearance-none [&>option]:bg-brand-navy [&>option]:text-white`}
-          >
-            <option value="" disabled className="text-white/30">{placeholder}</option>
-            {label === "Project Type" && (
-              <>
-                <option value="residential">Residential Layout</option>
-                <option value="commercial">Commercial Building</option>
-                <option value="industrial">Industrial Facility</option>
-                <option value="warehouse">Warehouse / Logistics</option>
-                <option value="institutional">Institutional</option>
-                <option value="other">Other</option>
-              </>
-            )}
-            {label === "Service Required" && (
-              <>
-                <option value="dtcp">DTCP, CMDA & LPA Plan Approvals</option>
-                <option value="rera">RERA Approvals & Compliance</option>
-                <option value="layout">Land Development & Layout Planning</option>
-                <option value="engineering">Industrial Engineering & Planning</option>
-                <option value="clearance">Statutory & Environmental Clearances</option>
-                <option value="other">Other</option>
-              </>
-            )}
-            {label === "Preferred Contact Method" && (
-              <>
-                <option value="phone">Phone Call</option>
-                <option value="whatsapp">WhatsApp</option>
-                <option value="email">Email</option>
-              </>
-            )}
-          </select>
-        ) : (
-          <input 
-            type={type} 
-            placeholder={placeholder}
-            className={inputClasses}
-          />
-        )}
-        <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-brand-gold transition-all duration-500 ease-out group-focus-within:w-full" />
-      </div>
     </div>
   );
 };
@@ -251,62 +243,50 @@ export default function Contact() {
 
             {/* RIGHT SIDE: FORM (62%) */}
             <div className="contact-right w-full lg:w-[calc(62%-2rem)] xl:w-[calc(62%-2.5rem)] pt-12 lg:pt-0">
-              <div className="relative bg-brand-navy rounded-2xl shadow-[0_30px_60px_rgba(7,9,26,0.15)] border border-brand-navy/10 p-8 md:p-12 lg:p-14 overflow-hidden w-full">
+              <div className="bg-white rounded-2xl shadow-xl border border-[#0A0A0A]/10 p-8 md:p-12 w-full relative">
                 
-                {/* Subtle internal blueprint grid for the card */}
-                <div className="absolute inset-0 pointer-events-none opacity-5" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
-
-                <div className="relative z-10 w-full">
-                  <div className="mb-12">
-                    <span className="typo-eyebrow text-brand-gold mb-4 block tracking-[0.2em] font-semibold">ENQUIRY</span>
-                    <h3 className="font-display font-bold text-4xl md:text-5xl lg:text-[3.5rem] xl:text-[4rem] text-white leading-[1.05] tracking-tight drop-shadow-sm mb-6">
-                      START YOUR <br/> <span className="text-brand-gold italic font-normal">PROJECT</span>
-                    </h3>
-                    <p className="font-body text-white/70 text-lg font-light max-w-xl">
-                      Tell us about your project and approval requirements.
-                    </p>
+                <div className="mb-10">
+                  <h3 className="font-display font-bold text-3xl md:text-4xl text-[#0A0A0A] leading-tight mb-3 uppercase tracking-wide">
+                    Project Inquiry
+                  </h3>
+                  <p className="font-sans text-[#0A0A0A]/60 text-base">
+                    Fill out the fields below and we'll get back to you shortly.
+                  </p>
+                </div>
+                
+                <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField num="01" label="Your Name" placeholder="John Doe" />
+                    <FormField num="02" label="Company / Organization" placeholder="Company Name" />
                   </div>
                   
-                  <form className="space-y-10" onSubmit={(e) => e.preventDefault()}>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
-                      <FormField num="01" label="Your Name" placeholder="John Doe" />
-                      <FormField num="02" label="Company / Organization" placeholder="Company Name" />
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
-                      <FormField num="03" label="Phone Number" type="tel" placeholder="+91 90000 00000" />
-                      <FormField num="04" label="Email Address" type="email" placeholder="john@example.com" />
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
-                      <FormField num="05" label="Project Location" placeholder="Thirumangalam, Chennai" />
-                      <FormField num="06" label="Project Type" type="select" placeholder="Select Project Type" />
-                    </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField num="03" label="Phone Number" type="tel" placeholder="+91 90000 00000" />
+                    <FormField num="04" label="Email Address" type="email" placeholder="john@example.com" />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField num="05" label="Project Location" placeholder="Thirumangalam, Chennai" />
+                    <FormField num="06" label="Project Type" type="select" placeholder="Select Project Type" />
+                  </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10">
-                      <FormField num="07" label="Service Required" type="select" placeholder="Select Service" />
-                      <FormField num="08" label="Preferred Contact Method" type="select" placeholder="Phone or Email?" />
-                    </div>
-                    
-                    <div>
-                      <FormField num="09" label="Brief Project Description" type="textarea" placeholder="Tell us about your requirements..." />
-                    </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField num="07" label="Service Required" type="select" placeholder="Select Service" />
+                    <FormField num="08" label="Preferred Contact Method" type="select" placeholder="Phone or Email?" />
+                  </div>
+                  
+                  <div>
+                    <FormField num="09" label="Brief Project Description" type="textarea" placeholder="Tell us about your requirements..." />
+                  </div>
 
-                    <div className="pt-8">
-                      <button className="group relative inline-flex items-center justify-center px-10 py-5 font-mono text-sm tracking-widest text-brand-navy bg-brand-gold overflow-hidden rounded-[2px] transition-all duration-500 w-full hover:shadow-2xl hover:shadow-brand-gold/20">
-                        <div className="absolute inset-0 w-full h-full bg-white translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500 ease-[0.76,0,0.24,1]" />
-                        <span className="relative z-10 flex items-center gap-3 transition-colors duration-300 group-hover:text-brand-navy font-bold">
-                          SEND YOUR PROJECT DETAILS
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transform group-hover:translate-x-2 transition-transform duration-300">
-                            <path d="M5 12h14M12 5l7 7-7 7"/>
-                          </svg>
-                        </span>
-                      </button>
-                    </div>
-                    
-                  </form>
-                </div>
+                  <div className="pt-6">
+                    <button className="w-full bg-brand-navy text-white font-sans font-bold tracking-widest uppercase py-4 px-8 rounded-md transition-all duration-300 hover:bg-brand-gold hover:text-brand-navy shadow-md">
+                      SEND YOUR PROJECT DETAILS
+                    </button>
+                  </div>
+                  
+                </form>
               </div>
             </div>
 

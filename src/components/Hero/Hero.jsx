@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { Link } from 'react-router-dom';
 import { ArrowDownRight } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -370,12 +371,12 @@ export default function Hero() {
           </p>
           
           <div className="hero-final-buttons flex flex-row items-center justify-start gap-2 md:gap-8 pointer-events-auto w-full">
-            <button className="hero-final-btn-1 opacity-0 flex-1 md:flex-none inline-flex items-center justify-center px-2 py-3.5 md:px-10 md:py-4 text-[9px] sm:text-xs md:text-sm font-semibold tracking-widest text-[#0a0510] bg-brand-gold rounded-full transition-all duration-300 hover:bg-brand-navy hover:text-white hover:scale-105 shadow-[0_4px_20px_rgba(212,175,55,0.4)] whitespace-nowrap">
+            <Link to="/contact" className="hero-final-btn-1 opacity-0 flex-1 md:flex-none inline-flex items-center justify-center px-2 py-3.5 md:px-10 md:py-4 text-[9px] sm:text-xs md:text-sm font-semibold tracking-widest text-[#0a0510] bg-brand-gold rounded-full transition-all duration-300 hover:bg-brand-navy hover:text-white hover:scale-105 shadow-[0_4px_20px_rgba(212,175,55,0.4)] whitespace-nowrap">
               GET A CONSULTATION
-            </button>
-            <button className="hero-final-btn-2 opacity-0 flex-1 md:flex-none inline-flex items-center justify-center px-2 py-3.5 md:px-10 md:py-4 text-[9px] sm:text-xs md:text-sm font-medium tracking-widest text-white bg-white/5 border border-white/20 rounded-full transition-all hover:bg-white/10 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.3)] whitespace-nowrap">
-              TALK TO US
-            </button>
+            </Link>
+            <Link to="/services" className="hero-final-btn-2 opacity-0 flex-1 md:flex-none inline-flex items-center justify-center px-2 py-3.5 md:px-10 md:py-4 text-[9px] sm:text-xs md:text-sm font-medium tracking-widest text-white bg-white/5 border border-white/20 rounded-full transition-all hover:bg-white/10 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.3)] whitespace-nowrap">
+              EXPLORE OUR SERVICES
+            </Link>
           </div>
         </div>
       </div>

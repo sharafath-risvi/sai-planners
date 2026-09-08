@@ -55,7 +55,7 @@ export default function Navbar() {
       >
         <div className="max-w-[1400px] mx-auto px-8 md:px-16">
           <div className={`flex items-center justify-between transition-all duration-500 ${
-            isScrolled ? 'bg-white/10 backdrop-blur-xl border border-white/10 px-10 py-4 rounded-full shadow-2xl' : 'bg-transparent'
+            isScrolled ? 'bg-white/95 backdrop-blur-xl border border-brand-navy/10 px-10 py-4 rounded-full shadow-2xl' : 'bg-transparent'
           }`}>
             {/* Logo */}
             <div className="flex-shrink-0 flex items-center relative h-10 md:h-12 lg:h-14 w-[140px] md:w-[180px] lg:w-[220px]">
@@ -76,7 +76,7 @@ export default function Navbar() {
                     <a
                       href={location.pathname === '/' ? link.href.replace('/', '') : link.href}
                       className={`text-[13px] xl:text-[15px] md:text-base font-medium tracking-[0.1em] transition-colors hover:text-brand-gold ${
-                        isScrolled ? 'text-white/80' : 'text-white/80'
+                        isScrolled ? 'text-brand-navy font-semibold' : 'text-white/80'
                       }`}
                     >
                       {link.name}
@@ -85,7 +85,7 @@ export default function Navbar() {
                     <Link
                       to={link.href}
                       className={`text-[13px] xl:text-[15px] md:text-base font-medium tracking-[0.1em] transition-colors hover:text-brand-gold ${
-                        isScrolled ? 'text-white/80' : 'text-white/80'
+                        isScrolled ? 'text-brand-navy font-semibold' : 'text-white/80'
                       }`}
                     >
                       {link.name}
@@ -109,7 +109,7 @@ export default function Navbar() {
             <div className="lg:hidden">
               <button 
                 onClick={() => setIsMobileMenuOpen(true)}
-                className={`p-2 focus:outline-none ${isScrolled ? 'text-white' : 'text-white'}`}
+                className={`p-2 focus:outline-none ${isScrolled ? 'text-brand-navy' : 'text-white'}`}
               >
                 <Menu size={24} />
               </button>

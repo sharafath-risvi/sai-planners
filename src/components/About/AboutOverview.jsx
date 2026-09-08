@@ -121,10 +121,6 @@ export default function AboutOverview() {
               />
               <div className="story-overlay absolute inset-0 bg-brand-navy/5 mix-blend-multiply pointer-events-none" />
               
-              {/* Subtle Architectural Grid on Image */}
-              <div className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-20">
-                <div className="w-full h-full" style={{ backgroundImage: 'linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-              </div>
             </div>
           </div>
 

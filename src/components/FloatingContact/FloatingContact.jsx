@@ -7,7 +7,7 @@ export default function FloatingContact() {
       
       {/* PHONE BUTTON */}
       <a 
-        href="tel:+910000000000" 
+        href="tel:9383360666" 
         className="w-16 h-16 bg-brand-navy text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-300 group relative right-2"
         aria-label="Call us"
       >
@@ -16,7 +16,7 @@ export default function FloatingContact() {
 
       {/* WHATSAPP BUTTON (Proper Official SVG Path) */}
       <a 
-        href="https://wa.me/910000000000" 
+        href="https://wa.me/919789071197" 
         target="_blank" 
         rel="noopener noreferrer"
         className="w-16 h-16 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-300 group"
