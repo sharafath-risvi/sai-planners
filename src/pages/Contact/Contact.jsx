@@ -1,11 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import CTA from '../../components/CTA/CTA';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const FormField = ({ label, num, type = "text", placeholder }) => {
+const FormField = ({ label, num, type = "text", placeholder, name, required }) => {
   const inputClasses = "w-full bg-[#FCFCFC] border border-[#0A0A0A]/15 rounded-md py-3.5 px-4 text-[#0A0A0A] font-sans text-base outline-none transition-all placeholder:text-[#0A0A0A]/30 focus:border-brand-navy focus:ring-1 focus:ring-brand-navy/20 focus:bg-white";
   
   return (
@@ -15,46 +15,50 @@ const FormField = ({ label, num, type = "text", placeholder }) => {
       </label>
       {type === "textarea" ? (
         <textarea 
+          name={name}
+          required={required}
           placeholder={placeholder}
           className={`${inputClasses} resize-none h-32`}
         />
       ) : type === "select" ? (
-        <select 
-          defaultValue=""
-          className={`${inputClasses} appearance-none cursor-pointer`}
-        >
-          <option value="" disabled className="text-[#0A0A0A]/30">{placeholder}</option>
-          {label === "Project Type" && (
-            <>
-              <option value="residential">Residential Layout</option>
-              <option value="commercial">Commercial Building</option>
-              <option value="industrial">Industrial Facility</option>
-              <option value="warehouse">Warehouse / Logistics</option>
-              <option value="institutional">Institutional</option>
-              <option value="other">Other</option>
-            </>
-          )}
-          {label === "Service Required" && (
-            <>
-              <option value="dtcp">DTCP, CMDA & LPA Plan Approvals</option>
-              <option value="rera">RERA Approvals & Compliance</option>
-              <option value="layout">Land Development & Layout Planning</option>
-              <option value="engineering">Industrial Engineering & Planning</option>
-              <option value="clearance">Statutory & Environmental Clearances</option>
-              <option value="other">Other</option>
-            </>
-          )}
-          {label === "Preferred Contact Method" && (
-            <>
-              <option value="phone">Phone Call</option>
-              <option value="whatsapp">WhatsApp</option>
-              <option value="email">Email</option>
-            </>
-          )}
-        </select>
+        <div className="relative w-full">
+          <select 
+            name={name}
+            required={required}
+            defaultValue=""
+            className={`${inputClasses} appearance-none cursor-pointer pr-10`}
+          >
+            <option value="" disabled className="text-[#0A0A0A]/30">{placeholder}</option>
+            {label === "Project Type" && (
+              <>
+                <option value="residential">Residential Layout</option>
+                <option value="commercial">Commercial Building</option>
+                <option value="industrial">Industrial Facility</option>
+                <option value="warehouse">Warehouse / Logistics</option>
+                <option value="institutional">Institutional</option>
+                <option value="other">Other</option>
+              </>
+            )}
+            {label === "Service Required" && (
+              <>
+                <option value="dtcp">DTCP, CMDA & LPA Plan Approvals</option>
+                <option value="rera">RERA Approvals & Compliance</option>
+                <option value="layout">Land Development & Layout Planning</option>
+                <option value="engineering">Industrial Engineering & Planning</option>
+                <option value="clearance">Statutory & Environmental Clearances</option>
+                <option value="other">Other</option>
+              </>
+            )}
+          </select>
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#0A0A0A]/50">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+        </div>
       ) : (
         <input 
           type={type} 
+          name={name}
+          required={required}
           placeholder={placeholder}
           className={inputClasses}
         />
@@ -65,6 +69,40 @@ const FormField = ({ label, num, type = "text", placeholder }) => {
 
 export default function Contact() {
   const containerRef = useRef(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState(null);
+
+  const onSubmit = async (event) => {
+    event.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+    const formData = new FormData(event.target);
+
+    formData.append("access_key", "918fe4dd-3749-4f06-be2c-76d924989e82");
+    formData.append("subject", "New Contact Enquiry — Sai Planners");
+
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: formData
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        setSubmitStatus('success');
+        event.target.reset();
+      } else {
+        console.error("Error", data);
+        setSubmitStatus('error');
+      }
+    } catch (error) {
+      console.error("Error", error);
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   
   useEffect(() => {
     // Ensure we start at top
@@ -254,35 +292,45 @@ export default function Contact() {
                   </p>
                 </div>
                 
-                <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+                <form className="space-y-6" onSubmit={onSubmit}>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField num="01" label="Your Name" placeholder="John Doe" />
-                    <FormField num="02" label="Company / Organization" placeholder="Company Name" />
+                    <FormField num="01" name="name" label="Your Name" placeholder="John Doe" required={true} />
+                    <FormField num="02" name="company" label="Company / Organization" placeholder="Company Name" required={false} />
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField num="03" label="Phone Number" type="tel" placeholder="+91 90000 00000" />
-                    <FormField num="04" label="Email Address" type="email" placeholder="john@example.com" />
+                    <FormField num="03" name="phone" label="Phone Number" type="tel" placeholder="+91 90000 00000" required={true} />
+                    <FormField num="04" name="email" label="Email Address" type="email" placeholder="john@example.com" required={true} />
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField num="05" label="Project Location" placeholder="Thirumangalam, Chennai" />
-                    <FormField num="06" label="Project Type" type="select" placeholder="Select Project Type" />
+                    <FormField num="05" name="location" label="Project Location" placeholder="Thirumangalam, Chennai" required={true} />
+                    <FormField num="06" name="projectType" label="Project Type" type="select" placeholder="Select Project Type" required={true} />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField num="07" label="Service Required" type="select" placeholder="Select Service" />
-                    <FormField num="08" label="Preferred Contact Method" type="select" placeholder="Phone or Email?" />
+                  <div>
+                    <FormField num="07" name="serviceRequired" label="Service Required" type="select" placeholder="Select Service" required={true} />
                   </div>
                   
                   <div>
-                    <FormField num="09" label="Brief Project Description" type="textarea" placeholder="Tell us about your requirements..." />
+                    <FormField num="08" name="description" label="Brief Project Description" type="textarea" placeholder="Tell us about your requirements..." required={true} />
                   </div>
 
+                  {submitStatus === 'success' && (
+                    <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-md text-sm font-sans">
+                      Thank you! Your enquiry has been submitted successfully. Our team will get back to you soon.
+                    </div>
+                  )}
+                  {submitStatus === 'error' && (
+                    <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm font-sans">
+                      Something went wrong. Please try again.
+                    </div>
+                  )}
+
                   <div className="pt-6">
-                    <button className="w-full bg-brand-navy text-white font-sans font-bold tracking-widest uppercase py-4 px-8 rounded-md transition-all duration-300 hover:bg-brand-gold hover:text-brand-navy shadow-md">
-                      SEND YOUR PROJECT DETAILS
+                    <button type="submit" disabled={isSubmitting} className="w-full bg-brand-navy text-white font-sans font-bold tracking-widest uppercase py-4 px-8 rounded-md transition-all duration-300 hover:bg-brand-gold hover:text-brand-navy shadow-md disabled:opacity-70 disabled:cursor-not-allowed">
+                      {isSubmitting ? 'SENDING...' : 'SEND YOUR PROJECT DETAILS'}
                     </button>
                   </div>
                   
