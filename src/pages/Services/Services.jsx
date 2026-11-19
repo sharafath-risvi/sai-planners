@@ -118,6 +118,8 @@ export default function Services() {
 
     const isDrawable = (img) => !!(img && img.complete && img.naturalWidth > 0);
 
+    let currentIndex = 0;
+
     const ensureImage = (index) => {
       if (index < 0 || index >= frameCount) return null;
       let img = images[index];
@@ -129,6 +131,18 @@ export default function Services() {
       const url = allFrameUrls[index];
       if (!url) return img;
       if (!img.getAttribute('src')) {
+        if (isMobile()) {
+          // Mobile loads frames lazily, so the exact frame often arrives AFTER the
+          // last scroll event. Repaint when it lands, otherwise the canvas keeps
+          // showing a neighbouring frame and the hero looks frozen.
+          img.onload = () => {
+            if (images[index] === img && index === currentIndex) render();
+          };
+          img.onerror = () => {
+            // Drop failed frames so the next warm pass retries them.
+            if (images[index] === img) images[index] = undefined;
+          };
+        }
         img.src = url;
       }
       return img;
@@ -150,12 +164,38 @@ export default function Services() {
       img.src = url;
     };
 
+    // Mobile frame window. Each frame is 1920x1080 (~8MB decoded), so loading the
+    // whole 450-frame sequence exhausts iOS/Android memory and the browser starts
+    // discarding bitmaps. Keep only a window around the current frame.
     const MOBILE_WARM = 40;
+    const MOBILE_KEEP = 70;
+    let lastWarmIndex = -1;
+    let travelDir = 1;
     const warmAround = (index) => {
       if (!isMobile()) return;
-      const start = Math.max(0, index - MOBILE_WARM);
-      const end = Math.min(frameCount - 1, index + MOBILE_WARM);
-      for (let i = start; i <= end; i++) ensureImage(i);
+      if (index === lastWarmIndex) return;
+      if (lastWarmIndex !== -1) travelDir = index > lastWarmIndex ? 1 : -1;
+      lastWarmIndex = index;
+
+      // Request NEAREST frames first, leading with the direction of travel.
+      // (Previously the window was requested low -> high, so on reverse scroll the
+      // frames right below the playhead were queued last and the canvas stayed
+      // frozen on a later frame until the whole window finished downloading.)
+      for (let d = 0; d <= MOBILE_WARM; d++) {
+        ensureImage(index + travelDir * d);
+        if (d) ensureImage(index - travelDir * d);
+      }
+
+      // Release frames far from the playhead so memory stays bounded both ways.
+      for (let i = 0; i < frameCount; i++) {
+        const img = images[i];
+        if (img && Math.abs(i - index) > MOBILE_KEEP) {
+          img.onload = null;
+          img.onerror = null;
+          images[i] = undefined;
+          if (img !== lastDrawableImg) img.src = '';
+        }
+      }
     };
 
     const findDrawable = (index) => {
@@ -192,6 +232,7 @@ export default function Services() {
 
     const render = () => {
       const index = Math.max(0, Math.min(frameCount - 1, Math.floor(scrollObj.frame) - 1));
+      currentIndex = index;
       ensureImage(index);
       if (isMobile()) warmAround(index);
 
@@ -265,11 +306,8 @@ export default function Services() {
     canvas.addEventListener('contextlost', onContextLost);
     canvas.addEventListener('contextrestored', onContextRestored);
 
-    if (isMobile()) {
-      // iOS URL-bar show/hide fires resize and recalculates pinSpacing,
-      // which detaches a GSAP pin from its spacer on reverse scroll.
-      ScrollTrigger.config({ ignoreMobileResize: true });
-    }
+    // Touch devices already default to ignoreMobileResize (iOS/Android URL-bar
+    // show/hide must not rebuild the trigger mid-scroll). Nothing to override.
 
     let ctx = gsap.context(() => {
       
@@ -285,7 +323,10 @@ export default function Services() {
                 // inner section keeps the hero in view while this trigger
                 // scrubs, and reverse from the CTA re-sticks without a gap.
                 pin: false,
-                end: "bottom bottom",
+                // Exactly the distance the sticky section travels inside the track
+                // (track height - section height), so scrub progress 1 coincides
+                // with the sticky release regardless of URL-bar height changes.
+                end: () => "+=" + Math.max(1, containerRef.current.offsetHeight - containerRef.current.firstElementChild.offsetHeight),
                 onUpdate: () => render(),
                 onRefresh: () => restoreAndRender(),
                 onEnter: () => restoreAndRender(),
@@ -300,30 +341,28 @@ export default function Services() {
         }
       });
 
-      // INITIAL SHAPE OPENING (Runs on load)
-      // Mobile: skip the circle clip-path open. If that tween is killed (Strict Mode /
-      // pin refresh) it freezes at circle(15%), leaving a mostly-empty black hero for
-      // the entire 2100% pin — including reverse scroll after the final heading.
-      if (isMobile()) {
-        gsap.set('.hero-canvas-wrapper', { clipPath: 'none', webkitClipPath: 'none' });
-        gsap.set('.services-hero-intro', { opacity: 1, scale: 1 });
-      } else {
-        gsap.set('.services-hero-intro', { opacity: 0, scale: 1.05 });
-        gsap.set('.hero-canvas-wrapper', { clipPath: 'circle(15% at 50% 50%)' });
-        
-        const openingTl = gsap.timeline({ delay: 0.2 });
-        openingTl.to('.hero-canvas-wrapper', {
-          clipPath: 'circle(150% at 50% 50%)',
-          duration: 2.0,
-          ease: "power3.inOut"
-        })
-        .to('.services-hero-intro', {
-          opacity: 1,
-          scale: 1,
-          duration: 1.5,
-          ease: "power2.out"
-        }, "-=0.5");
-      }
+      // INITIAL SHAPE OPENING (Runs on load) - same circular reveal on desktop and mobile
+      gsap.set('.services-hero-intro', { opacity: 0, scale: 1.05 });
+      gsap.set('.hero-canvas-wrapper', { clipPath: 'circle(15% at 50% 50%)' }); // Elegant circular opening
+
+      const openingTl = gsap.timeline({ delay: 0.2 });
+      openingTl.to('.hero-canvas-wrapper', {
+        clipPath: 'circle(150% at 50% 50%)',
+        duration: 2.0,
+        ease: "power3.inOut",
+        // Mobile only: circle(150%) already shows the whole frame, so drop the mask
+        // once the reveal ends. A permanent clip-path on a layer that holds a
+        // continuously repainted canvas makes iOS Safari stop repainting it.
+        ...(isMobile()
+          ? { onComplete: () => gsap.set('.hero-canvas-wrapper', { clearProps: 'clipPath,webkitClipPath' }) }
+          : {})
+      })
+      .to('.services-hero-intro', {
+        opacity: 1,
+        scale: 1,
+        duration: 1.5,
+        ease: "power2.out"
+      }, "-=0.5");
 
       // INITIAL SCROLL EXIT (Split OUR SERVICES physically off-screen)
       // We use a massive x translation so they physically leave the viewport.
@@ -455,9 +494,6 @@ export default function Services() {
       window.removeEventListener('pageshow', onPageShow);
       canvas.removeEventListener('contextlost', onContextLost);
       canvas.removeEventListener('contextrestored', onContextRestored);
-      if (isMobile()) {
-        ScrollTrigger.config({ ignoreMobileResize: false });
-      }
       ctx.revert();
     };
   }, []);
@@ -473,7 +509,7 @@ export default function Services() {
       <section className="sticky top-0 md:relative z-[1] w-full h-[100svh] md:h-[100vh] bg-black overflow-hidden flex flex-col justify-center border-b border-white/5 touch-pan-y">
         
         {/* Canvas Video Background */}
-        <div className="hero-canvas-wrapper absolute inset-0 w-full h-full overflow-hidden md:transition-all md:duration-300 max-md:![clip-path:none]">
+        <div className="hero-canvas-wrapper absolute inset-0 w-full h-full overflow-hidden md:transition-all md:duration-300">
           <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block object-cover" />
         </div>
         
