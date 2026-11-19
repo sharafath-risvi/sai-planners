@@ -150,7 +150,7 @@ export default function Services() {
       img.src = url;
     };
 
-    const MOBILE_WARM = 18;
+    const MOBILE_WARM = 40;
     const warmAround = (index) => {
       if (!isMobile()) return;
       const start = Math.max(0, index - MOBILE_WARM);
@@ -160,7 +160,7 @@ export default function Services() {
 
     const findDrawable = (index) => {
       if (isDrawable(images[index])) return images[index];
-      for (let d = 1; d <= 32; d++) {
+      for (let d = 1; d <= 48; d++) {
         if (isDrawable(images[index - d])) return images[index - d];
         if (isDrawable(images[index + d])) return images[index + d];
       }
@@ -177,6 +177,19 @@ export default function Services() {
       }
     };
 
+    const paintImage = (img) => {
+      if (canvas.width < 2 || canvas.height < 2) syncCanvasSize(true);
+      const cw = canvas.width;
+      const ch = canvas.height;
+      const iw = img.naturalWidth;
+      const ih = img.naturalHeight;
+      const ratio = Math.max(cw / iw, ch / ih);
+      const cx = (cw - iw * ratio) / 2;
+      const cy = (ch - ih * ratio) / 2;
+      context.clearRect(0, 0, cw, ch);
+      context.drawImage(img, 0, 0, iw, ih, cx, cy, iw * ratio, ih * ratio);
+    };
+
     const render = () => {
       const index = Math.max(0, Math.min(frameCount - 1, Math.floor(scrollObj.frame) - 1));
       ensureImage(index);
@@ -185,25 +198,12 @@ export default function Services() {
       const img = findDrawable(index);
       if (!isDrawable(img)) {
         if (isMobile()) reviveImage(index);
-        return; // Do not clearRect — keeps the last painted frame instead of a blank screen
+        return;
       }
 
       lastDrawableImg = img;
-      if (canvas.width < 2 || canvas.height < 2) syncCanvasSize(true);
-
-      const cw = canvas.width;
-      const ch = canvas.height;
-      const iw = img.naturalWidth;
-      const ih = img.naturalHeight;
-      const ratio = Math.max(cw / iw, ch / ih);
-      const cx = (cw - iw * ratio) / 2;
-      const cy = (ch - ih * ratio) / 2;
-
-      // Crucial: Clear the canvas before drawing to prevent alpha-stacking (darkness/ghosting)
-      // from semi-transparent PNG frames during scroll.
-      context.clearRect(0, 0, cw, ch);
       try {
-        context.drawImage(img, 0, 0, iw, ih, cx, cy, iw * ratio, ih * ratio);
+        paintImage(img);
       } catch {
         if (isMobile()) reviveImage(index);
       }
@@ -211,18 +211,21 @@ export default function Services() {
 
     const restoreAndRender = () => {
       if (isMobile()) {
-        // iOS discards the 2D backing store when the pinned canvas leaves the viewport.
-        // Re-assigning width/height recreates it so frames can paint again on scroll-back.
-        syncCanvasSize(true);
+        const w = Math.max(1, window.innerWidth);
+        const h = Math.max(1, window.innerHeight);
+        const sizeChanged = canvas.width !== w || canvas.height !== h;
+        if (sizeChanged) {
+          canvas.width = w;
+          canvas.height = h;
+        }
         context = canvas.getContext('2d', { alpha: false }) || context;
+        // If the backing store was cleared, immediately paint the last known frame
+        // so reverse-scroll never shows an empty hero while nearby frames decode.
+        if (isDrawable(lastDrawableImg)) {
+          try { paintImage(lastDrawableImg); } catch { /* revive below via render() */ }
+        }
       }
       render();
-      if (isMobile()) {
-        requestAnimationFrame(() => {
-          syncCanvasSize(canvas.width < 2 || canvas.height < 2);
-          render();
-        });
-      }
     };
 
     // Desktop: preload the full sequence (existing behaviour).
@@ -240,7 +243,8 @@ export default function Services() {
     }
 
     const handleResize = () => {
-      syncCanvasSize(true);
+      if (isMobile() && ScrollTrigger.isRefreshing) return;
+      syncCanvasSize(false);
       render();
     };
     window.addEventListener('resize', handleResize);
@@ -261,9 +265,16 @@ export default function Services() {
     canvas.addEventListener('contextlost', onContextLost);
     canvas.addEventListener('contextrestored', onContextRestored);
 
-    const visualViewport = window.visualViewport;
-    if (isMobile() && visualViewport) {
-      visualViewport.addEventListener('resize', handleResize);
+    if (isMobile()) {
+      // iOS URL-bar show/hide fires resize and recalculates pinSpacing (2100%),
+      // which detaches the pinned canvas from the spacer on reverse scroll.
+      ScrollTrigger.config({ ignoreMobileResize: true });
+      // overflow-x:hidden on html/body turns them into a containing block, so
+      // position:fixed pins never stick — the hero sits at the top of the 2100%
+      // spacer and reverse scroll is empty navy screens. `clip` still blocks
+      // horizontal overflow without breaking ScrollTrigger pinning.
+      document.documentElement.style.setProperty('overflow-x', 'clip');
+      document.body.style.setProperty('overflow-x', 'clip');
     }
 
     let ctx = gsap.context(() => {
@@ -275,8 +286,11 @@ export default function Services() {
           end: "+=2100%",
           scrub: true,
           pin: true,
+          pinSpacing: true,
           ...(isMobile() ? {
-            invalidateOnRefresh: true,
+            pinType: "fixed",
+            anticipatePin: 1,
+            invalidateOnRefresh: false,
             onUpdate: () => render(),
             onRefresh: () => restoreAndRender(),
             onEnter: () => restoreAndRender(),
@@ -287,21 +301,29 @@ export default function Services() {
       });
 
       // INITIAL SHAPE OPENING (Runs on load)
-      gsap.set('.services-hero-intro', { opacity: 0, scale: 1.05 });
-      gsap.set('.hero-canvas-wrapper', { clipPath: 'circle(15% at 50% 50%)' }); // Elegant circular opening
-      
-      const openingTl = gsap.timeline({ delay: 0.2 });
-      openingTl.to('.hero-canvas-wrapper', {
-        clipPath: 'circle(150% at 50% 50%)',
-        duration: 2.0,
-        ease: "power3.inOut"
-      })
-      .to('.services-hero-intro', {
-        opacity: 1,
-        scale: 1,
-        duration: 1.5,
-        ease: "power2.out"
-      }, "-=0.5");
+      // Mobile: skip the circle clip-path open. If that tween is killed (Strict Mode /
+      // pin refresh) it freezes at circle(15%), leaving a mostly-empty black hero for
+      // the entire 2100% pin — including reverse scroll after the final heading.
+      if (isMobile()) {
+        gsap.set('.hero-canvas-wrapper', { clipPath: 'none', webkitClipPath: 'none' });
+        gsap.set('.services-hero-intro', { opacity: 1, scale: 1 });
+      } else {
+        gsap.set('.services-hero-intro', { opacity: 0, scale: 1.05 });
+        gsap.set('.hero-canvas-wrapper', { clipPath: 'circle(15% at 50% 50%)' });
+        
+        const openingTl = gsap.timeline({ delay: 0.2 });
+        openingTl.to('.hero-canvas-wrapper', {
+          clipPath: 'circle(150% at 50% 50%)',
+          duration: 2.0,
+          ease: "power3.inOut"
+        })
+        .to('.services-hero-intro', {
+          opacity: 1,
+          scale: 1,
+          duration: 1.5,
+          ease: "power2.out"
+        }, "-=0.5");
+      }
 
       // INITIAL SCROLL EXIT (Split OUR SERVICES physically off-screen)
       // We use a massive x translation so they physically leave the viewport.
@@ -433,8 +455,10 @@ export default function Services() {
       window.removeEventListener('pageshow', onPageShow);
       canvas.removeEventListener('contextlost', onContextLost);
       canvas.removeEventListener('contextrestored', onContextRestored);
-      if (visualViewport) {
-        visualViewport.removeEventListener('resize', handleResize);
+      if (isMobile()) {
+        ScrollTrigger.config({ ignoreMobileResize: false });
+        document.documentElement.style.removeProperty('overflow-x');
+        document.body.style.removeProperty('overflow-x');
       }
       ctx.revert();
     };
@@ -443,11 +467,14 @@ export default function Services() {
   return (
     <div className="bg-[#050505] min-h-screen font-body text-white selection:bg-brand-gold selection:text-brand-navy">
       
-      {/* 1. CINEMATIC HERO SECTION (Pinned) */}
-      <section ref={containerRef} className="relative w-full h-[100vh] bg-black overflow-hidden flex flex-col justify-center border-b border-white/5">
+      {/* 1. CINEMATIC HERO SECTION (Pinned)
+          Outer wrapper is the pin target so overflow-hidden on the inner section
+          cannot break ScrollTrigger pinning on iOS reverse-scroll. */}
+      <div ref={containerRef} className="relative w-full">
+      <section className="relative z-[1] w-full h-[100svh] md:h-[100vh] bg-black overflow-hidden flex flex-col justify-center border-b border-white/5">
         
         {/* Canvas Video Background */}
-        <div className="hero-canvas-wrapper absolute inset-0 w-full h-full overflow-hidden transition-all duration-300">
+        <div className="hero-canvas-wrapper absolute inset-0 w-full h-full overflow-hidden md:transition-all md:duration-300 max-md:![clip-path:none]">
           <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block object-cover" />
         </div>
         
@@ -583,6 +610,7 @@ export default function Services() {
         </div>
 
       </section>
+      </div>
 
 
       {/* 4. FINAL CLOSING CTA */}
