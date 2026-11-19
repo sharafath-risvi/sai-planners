@@ -76,18 +76,12 @@ export default function Services() {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   
-  // Dynamically detect all frames at build/runtime using Vite
-  const glob1 = import.meta.glob('/public/serviceoneframeswebp/*.webp');
-  const glob2 = import.meta.glob('/public/servicetwoframeswebp/*.webp');
-
-  const getSortedUrls = (globObj) => {
-    return Object.keys(globObj)
-      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
-      .map(path => path.replace(/^\/public/, ''));
-  };
-
-  const allFrameUrls = [...getSortedUrls(glob1), ...getSortedUrls(glob2)];
-  const frameCount = allFrameUrls.length || 600; // Fallback just in case
+  // Pre-generate frame URLs cleanly without creating hundreds of dynamic import chunks
+  const allFrameUrls = [
+    ...Array.from({ length: 300 }, (_, i) => `/serviceoneframeswebp/ezgif-frame-${String(i + 1).padStart(3, '0')}.webp`),
+    ...Array.from({ length: 150 }, (_, i) => `/servicetwoframeswebp/ezgif-frame-${String(i + 1).padStart(3, '0')}.webp`),
+  ];
+  const frameCount = allFrameUrls.length || 450;
 
   const serviceText = {
     s1: { num: "01", title: "DTCP PLAN APPROVALS", desc: "Coordinating planning submissions and statutory approval requirements with the Directorate of Town and Country Planning." },
@@ -112,34 +106,20 @@ export default function Services() {
     const mobileMq = window.matchMedia('(max-width: 767px)');
     const isMobile = () => mobileMq.matches;
 
+    if (isMobile()) {
+      ScrollTrigger.config({ ignoreMobileResize: true });
+    }
+
     let context = canvas.getContext('2d', { alpha: false });
     const images = new Array(frameCount);
     const scrollObj = { frame: 1 };
     let currentIndex = 0;
     let renderedIndex = -1;
-    let travelDir = 1;
     let lastDrawableImg = null;
     let lastMobileWidth = 0;
     let lastMobileHeight = 0;
 
     const isDrawable = (img) => !!(img && img.complete && img.naturalWidth > 0);
-
-    // Playhead-prioritized concurrent preloader on mobile (and full preloader on desktop):
-    // On mobile, keeps at most MAX_CONCURRENT requests in flight so the current frame
-    // and its immediate neighbours in the direction of scroll always load right away,
-    // while steadily preloading the rest of the sequence without evicting loaded frames.
-    const MAX_CONCURRENT = 8;
-    let inFlight = 0;
-
-    const findNextToLoad = () => {
-      for (let d = 0; d < frameCount; d++) {
-        const forward = currentIndex + travelDir * d;
-        if (forward >= 0 && forward < frameCount && !images[forward]) return forward;
-        const backward = currentIndex - travelDir * d;
-        if (d > 0 && backward >= 0 && backward < frameCount && !images[backward]) return backward;
-      }
-      return -1;
-    };
 
     const startImageLoad = (index) => {
       if (index < 0 || index >= frameCount) return null;
@@ -148,72 +128,32 @@ export default function Services() {
       if (!url) return null;
       const img = new Image();
       images[index] = img;
-      inFlight++;
       img.onload = () => {
-        inFlight = Math.max(0, inFlight - 1);
         if (disposed) return;
-        if (
-          renderedIndex !== currentIndex &&
-          (renderedIndex === -1 || Math.abs(index - currentIndex) <= Math.abs(renderedIndex - currentIndex))
-        ) {
+        const curTarget = Math.max(0, Math.min(frameCount - 1, Math.floor(scrollObj.frame) - 1));
+        if (index === curTarget || renderedIndex === -1) {
           render();
         }
-        if (isMobile()) pumpMobileLoader();
-      };
-      img.onerror = () => {
-        inFlight = Math.max(0, inFlight - 1);
-        if (disposed) return;
-        if (images[index] === img) images[index] = undefined;
-        if (isMobile()) pumpMobileLoader();
       };
       img.src = url;
       return img;
     };
 
-    const pumpMobileLoader = () => {
-      if (disposed || !isMobile()) return;
-      while (inFlight < MAX_CONCURRENT) {
-        const nextIdx = findNextToLoad();
-        if (nextIdx === -1) break;
-        startImageLoad(nextIdx);
-      }
-    };
-
-    // Re-decode a single frame from HTTP cache if mobile browser discarded its bitmap.
-    const reviveImage = (index) => {
-      if (disposed || index < 0 || index >= frameCount) return;
-      const img = images[index];
-      const url = allFrameUrls[index];
-      if (!img || !url || img._reviving) return;
-      img._reviving = true;
-      img.onload = () => {
-        img._reviving = false;
-        if (!disposed && isDrawable(img)) render();
-      };
-      img.onerror = () => {
-        img._reviving = false;
-      };
-      img.src = url;
-    };
-
-    const findDrawableIndex = (index) => {
-      if (isDrawable(images[index])) return index;
+    const findNearestDrawable = (index) => {
+      if (isDrawable(images[index])) return images[index];
       for (let d = 1; d < frameCount; d++) {
-        const prev = index - travelDir * d;
-        if (prev >= 0 && prev < frameCount && isDrawable(images[prev])) return prev;
-        const next = index + travelDir * d;
-        if (next >= 0 && next < frameCount && isDrawable(images[next])) return next;
+        const left = index - d;
+        if (left >= 0 && isDrawable(images[left])) return images[left];
+        const right = index + d;
+        if (right < frameCount && isDrawable(images[right])) return images[right];
       }
-      return -1;
+      return isDrawable(lastDrawableImg) ? lastDrawableImg : null;
     };
 
     const syncCanvasSize = (force = false) => {
       const w = Math.max(1, window.innerWidth);
       const h = Math.max(1, window.innerHeight);
       if (isMobile()) {
-        // Ignore small height-only changes caused by the mobile browser URL bar
-        // collapsing/expanding when scroll direction changes, so the canvas
-        // backing store is never wiped mid-scroll.
         const widthChanged = w !== lastMobileWidth;
         const majorHeightChanged = !lastMobileHeight || Math.abs(h - lastMobileHeight) > lastMobileHeight * 0.25;
         if (force || canvas.width < 2 || canvas.height < 2 || widthChanged || majorHeightChanged) {
@@ -244,10 +184,7 @@ export default function Services() {
     const render = () => {
       if (disposed) return;
       const index = Math.max(0, Math.min(frameCount - 1, Math.floor(scrollObj.frame) - 1));
-      if (index !== currentIndex) {
-        travelDir = index > currentIndex ? 1 : -1;
-        currentIndex = index;
-      }
+      currentIndex = index;
 
       if (!isMobile()) {
         const img = startImageLoad(index);
@@ -258,22 +195,12 @@ export default function Services() {
         return;
       }
 
-      pumpMobileLoader();
-
-      const drawIdx = findDrawableIndex(index);
-      const img = drawIdx !== -1 ? images[drawIdx] : (isDrawable(lastDrawableImg) ? lastDrawableImg : null);
-      if (!isDrawable(img)) {
-        if (images[index] && images[index].complete) reviveImage(index);
-        return;
-      }
-
-      if (drawIdx !== -1) renderedIndex = drawIdx;
+      startImageLoad(index);
+      const img = findNearestDrawable(index);
+      if (!isDrawable(img)) return;
+      renderedIndex = index;
       lastDrawableImg = img;
-      try {
-        paintImage(img);
-      } catch {
-        if (drawIdx !== -1) reviveImage(drawIdx);
-      }
+      paintImage(img);
     };
 
     const restoreAndRender = () => {
@@ -288,20 +215,14 @@ export default function Services() {
       render();
     };
 
-    if (!isMobile()) {
-      for (let i = 0; i < frameCount; i++) startImageLoad(i);
-    } else {
-      pumpMobileLoader();
+    // Preload all frames on mount
+    for (let i = 0; i < frameCount; i++) {
+      startImageLoad(i);
     }
 
     const handleResize = () => {
       if (disposed) return;
       if (isMobile() && ScrollTrigger.isRefreshing) return;
-      if (!isMobile()) {
-        for (let i = 0; i < frameCount; i++) startImageLoad(i);
-      } else {
-        pumpMobileLoader();
-      }
       syncCanvasSize(!isMobile());
       render();
     };
@@ -333,8 +254,8 @@ export default function Services() {
           end: "+=2100%",
           scrub: true,
           pin: true,
+          onUpdate: () => render(),
           ...(isMobile() ? {
-            onUpdate: () => render(),
             onRefresh: () => restoreAndRender(),
             onEnter: () => restoreAndRender(),
             onEnterBack: () => restoreAndRender(),
@@ -497,14 +418,31 @@ export default function Services() {
       // FINAL HERO STATE
       // Video reaches final frame at chap2_vid1+=12.0
       tl.addLabel("final_state", "chap2_vid1+=12.0");
-      tl.to('.final-blur-overlay', { visibility: 'visible', opacity: 1, duration: 1.0, ease: "power2.inOut" }, "final_state");
-      tl.fromTo('.layout-final', { opacity: 0, y: 30, visibility: 'visible' }, { opacity: 1, y: 0, duration: 1.0, ease: "power2.out" }, "final_state+=0.3");
-      tl.to({}, { duration: 0.1 }, "final_state+=1.3"); // Hold removed so scroll smoothly hands off to the next section
+      if (isMobile()) {
+        tl.fromTo('.final-blur-overlay', 
+          { visibility: 'hidden', opacity: 0 }, 
+          { visibility: 'visible', opacity: 1, duration: 1.0, ease: "power2.inOut", immediateRender: false }, 
+          "final_state"
+        );
+        tl.fromTo('.layout-final', 
+          { visibility: 'hidden', opacity: 0, y: 30 }, 
+          { visibility: 'visible', opacity: 1, y: 0, duration: 1.0, ease: "power2.out", immediateRender: false }, 
+          "final_state+=0.3"
+        );
+        tl.to({}, { duration: 0.8 }, "final_state+=1.3");
+      } else {
+        tl.to('.final-blur-overlay', { visibility: 'visible', opacity: 1, duration: 1.0, ease: "power2.inOut" }, "final_state");
+        tl.fromTo('.layout-final', { opacity: 0, y: 30, visibility: 'visible' }, { opacity: 1, y: 0, duration: 1.0, ease: "power2.out" }, "final_state+=0.3");
+        tl.to({}, { duration: 0.1 }, "final_state+=1.3"); // Hold removed so scroll smoothly hands off to the next section
+      }
 
     }, containerRef);
 
     return () => {
       disposed = true;
+      if (isMobile()) {
+        ScrollTrigger.config({ ignoreMobileResize: false });
+      }
       window.removeEventListener('resize', handleResize);
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('pageshow', onPageShow);
