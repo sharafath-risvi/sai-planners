@@ -108,110 +108,121 @@ export default function Services() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    let disposed = false;
     const mobileMq = window.matchMedia('(max-width: 767px)');
     const isMobile = () => mobileMq.matches;
 
     let context = canvas.getContext('2d', { alpha: false });
     const images = new Array(frameCount);
     const scrollObj = { frame: 1 };
+    let currentIndex = 0;
+    let renderedIndex = -1;
+    let travelDir = 1;
     let lastDrawableImg = null;
+    let lastMobileWidth = 0;
+    let lastMobileHeight = 0;
 
     const isDrawable = (img) => !!(img && img.complete && img.naturalWidth > 0);
 
-    let currentIndex = 0;
+    // Playhead-prioritized concurrent preloader on mobile (and full preloader on desktop):
+    // On mobile, keeps at most MAX_CONCURRENT requests in flight so the current frame
+    // and its immediate neighbours in the direction of scroll always load right away,
+    // while steadily preloading the rest of the sequence without evicting loaded frames.
+    const MAX_CONCURRENT = 8;
+    let inFlight = 0;
 
-    const ensureImage = (index) => {
+    const findNextToLoad = () => {
+      for (let d = 0; d < frameCount; d++) {
+        const forward = currentIndex + travelDir * d;
+        if (forward >= 0 && forward < frameCount && !images[forward]) return forward;
+        const backward = currentIndex - travelDir * d;
+        if (d > 0 && backward >= 0 && backward < frameCount && !images[backward]) return backward;
+      }
+      return -1;
+    };
+
+    const startImageLoad = (index) => {
       if (index < 0 || index >= frameCount) return null;
-      let img = images[index];
-      if (!img) {
-        img = new Image();
-        img.decoding = 'async';
-        images[index] = img;
-      }
+      if (images[index]) return images[index];
       const url = allFrameUrls[index];
-      if (!url) return img;
-      if (!img.getAttribute('src')) {
-        if (isMobile()) {
-          // Mobile loads frames lazily, so the exact frame often arrives AFTER the
-          // last scroll event. Repaint when it lands, otherwise the canvas keeps
-          // showing a neighbouring frame and the hero looks frozen.
-          img.onload = () => {
-            if (images[index] === img && index === currentIndex) render();
-          };
-          img.onerror = () => {
-            // Drop failed frames so the next warm pass retries them.
-            if (images[index] === img) images[index] = undefined;
-          };
+      if (!url) return null;
+      const img = new Image();
+      images[index] = img;
+      inFlight++;
+      img.onload = () => {
+        inFlight = Math.max(0, inFlight - 1);
+        if (disposed) return;
+        if (
+          renderedIndex !== currentIndex &&
+          (renderedIndex === -1 || Math.abs(index - currentIndex) <= Math.abs(renderedIndex - currentIndex))
+        ) {
+          render();
         }
-        img.src = url;
-      }
+        if (isMobile()) pumpMobileLoader();
+      };
+      img.onerror = () => {
+        inFlight = Math.max(0, inFlight - 1);
+        if (disposed) return;
+        if (images[index] === img) images[index] = undefined;
+        if (isMobile()) pumpMobileLoader();
+      };
+      img.src = url;
       return img;
     };
 
-    // Re-decode a single frame from HTTP cache if iOS discarded its bitmap.
+    const pumpMobileLoader = () => {
+      if (disposed || !isMobile()) return;
+      while (inFlight < MAX_CONCURRENT) {
+        const nextIdx = findNextToLoad();
+        if (nextIdx === -1) break;
+        startImageLoad(nextIdx);
+      }
+    };
+
+    // Re-decode a single frame from HTTP cache if mobile browser discarded its bitmap.
     const reviveImage = (index) => {
+      if (disposed || index < 0 || index >= frameCount) return;
       const img = images[index];
       const url = allFrameUrls[index];
       if (!img || !url || img._reviving) return;
       img._reviving = true;
-      const finish = () => {
+      img.onload = () => {
         img._reviving = false;
-        if (isDrawable(img)) render();
+        if (!disposed && isDrawable(img)) render();
       };
-      img.onload = finish;
-      img.onerror = () => { img._reviving = false; };
-      img.removeAttribute('src');
+      img.onerror = () => {
+        img._reviving = false;
+      };
       img.src = url;
     };
 
-    // Mobile frame window. Each frame is 1920x1080 (~8MB decoded), so loading the
-    // whole 450-frame sequence exhausts iOS/Android memory and the browser starts
-    // discarding bitmaps. Keep only a window around the current frame.
-    const MOBILE_WARM = 40;
-    const MOBILE_KEEP = 70;
-    let lastWarmIndex = -1;
-    let travelDir = 1;
-    const warmAround = (index) => {
-      if (!isMobile()) return;
-      if (index === lastWarmIndex) return;
-      if (lastWarmIndex !== -1) travelDir = index > lastWarmIndex ? 1 : -1;
-      lastWarmIndex = index;
-
-      // Request NEAREST frames first, leading with the direction of travel.
-      // (Previously the window was requested low -> high, so on reverse scroll the
-      // frames right below the playhead were queued last and the canvas stayed
-      // frozen on a later frame until the whole window finished downloading.)
-      for (let d = 0; d <= MOBILE_WARM; d++) {
-        ensureImage(index + travelDir * d);
-        if (d) ensureImage(index - travelDir * d);
+    const findDrawableIndex = (index) => {
+      if (isDrawable(images[index])) return index;
+      for (let d = 1; d < frameCount; d++) {
+        const prev = index - travelDir * d;
+        if (prev >= 0 && prev < frameCount && isDrawable(images[prev])) return prev;
+        const next = index + travelDir * d;
+        if (next >= 0 && next < frameCount && isDrawable(images[next])) return next;
       }
-
-      // Release frames far from the playhead so memory stays bounded both ways.
-      for (let i = 0; i < frameCount; i++) {
-        const img = images[i];
-        if (img && Math.abs(i - index) > MOBILE_KEEP) {
-          img.onload = null;
-          img.onerror = null;
-          images[i] = undefined;
-          if (img !== lastDrawableImg) img.src = '';
-        }
-      }
-    };
-
-    const findDrawable = (index) => {
-      if (isDrawable(images[index])) return images[index];
-      for (let d = 1; d <= 48; d++) {
-        if (isDrawable(images[index - d])) return images[index - d];
-        if (isDrawable(images[index + d])) return images[index + d];
-      }
-      if (isDrawable(lastDrawableImg)) return lastDrawableImg;
-      return null;
+      return -1;
     };
 
     const syncCanvasSize = (force = false) => {
       const w = Math.max(1, window.innerWidth);
       const h = Math.max(1, window.innerHeight);
-      if (force || canvas.width !== w || canvas.height !== h) {
+      if (isMobile()) {
+        // Ignore small height-only changes caused by the mobile browser URL bar
+        // collapsing/expanding when scroll direction changes, so the canvas
+        // backing store is never wiped mid-scroll.
+        const widthChanged = w !== lastMobileWidth;
+        const majorHeightChanged = !lastMobileHeight || Math.abs(h - lastMobileHeight) > lastMobileHeight * 0.25;
+        if (force || canvas.width < 2 || canvas.height < 2 || widthChanged || majorHeightChanged) {
+          canvas.width = w;
+          canvas.height = h;
+          lastMobileWidth = w;
+          lastMobileHeight = h;
+        }
+      } else if (force || canvas.width !== w || canvas.height !== h) {
         canvas.width = w;
         canvas.height = h;
       }
@@ -231,65 +242,72 @@ export default function Services() {
     };
 
     const render = () => {
+      if (disposed) return;
       const index = Math.max(0, Math.min(frameCount - 1, Math.floor(scrollObj.frame) - 1));
-      currentIndex = index;
-      ensureImage(index);
-      if (isMobile()) warmAround(index);
+      if (index !== currentIndex) {
+        travelDir = index > currentIndex ? 1 : -1;
+        currentIndex = index;
+      }
 
-      const img = findDrawable(index);
-      if (!isDrawable(img)) {
-        if (isMobile()) reviveImage(index);
+      if (!isMobile()) {
+        const img = startImageLoad(index);
+        if (!isDrawable(img)) return;
+        renderedIndex = index;
+        lastDrawableImg = img;
+        paintImage(img);
         return;
       }
 
+      pumpMobileLoader();
+
+      const drawIdx = findDrawableIndex(index);
+      const img = drawIdx !== -1 ? images[drawIdx] : (isDrawable(lastDrawableImg) ? lastDrawableImg : null);
+      if (!isDrawable(img)) {
+        if (images[index] && images[index].complete) reviveImage(index);
+        return;
+      }
+
+      if (drawIdx !== -1) renderedIndex = drawIdx;
       lastDrawableImg = img;
       try {
         paintImage(img);
       } catch {
-        if (isMobile()) reviveImage(index);
+        if (drawIdx !== -1) reviveImage(drawIdx);
       }
     };
 
     const restoreAndRender = () => {
+      if (disposed) return;
       if (isMobile()) {
-        const w = Math.max(1, window.innerWidth);
-        const h = Math.max(1, window.innerHeight);
-        const sizeChanged = canvas.width !== w || canvas.height !== h;
-        if (sizeChanged) {
-          canvas.width = w;
-          canvas.height = h;
-        }
+        syncCanvasSize(false);
         context = canvas.getContext('2d', { alpha: false }) || context;
-        // If the backing store was cleared, immediately paint the last known frame
-        // so reverse-scroll never shows an empty hero while nearby frames decode.
         if (isDrawable(lastDrawableImg)) {
-          try { paintImage(lastDrawableImg); } catch { /* revive below via render() */ }
+          try { paintImage(lastDrawableImg); } catch { /* render() below will recover */ }
         }
       }
       render();
     };
 
-    // Desktop: preload the full sequence (existing behaviour).
-    // Mobile: load a window around the current frame so Safari does not evict the canvas bitmap.
     if (!isMobile()) {
-      for (let i = 0; i < frameCount; i++) ensureImage(i);
+      for (let i = 0; i < frameCount; i++) startImageLoad(i);
     } else {
-      warmAround(0);
-    }
-
-    if (images[0] && isDrawable(images[0])) {
-      render();
-    } else if (images[0]) {
-      images[0].onload = render;
+      pumpMobileLoader();
     }
 
     const handleResize = () => {
+      if (disposed) return;
       if (isMobile() && ScrollTrigger.isRefreshing) return;
-      syncCanvasSize(false);
+      if (!isMobile()) {
+        for (let i = 0; i < frameCount; i++) startImageLoad(i);
+      } else {
+        pumpMobileLoader();
+      }
+      syncCanvasSize(!isMobile());
       render();
     };
     window.addEventListener('resize', handleResize);
-    handleResize();
+    syncCanvasSize(true);
+    render();
 
     const onVisibility = () => {
       if (document.visibilityState === 'visible') restoreAndRender();
@@ -306,53 +324,34 @@ export default function Services() {
     canvas.addEventListener('contextlost', onContextLost);
     canvas.addEventListener('contextrestored', onContextRestored);
 
-    // Touch devices already default to ignoreMobileResize (iOS/Android URL-bar
-    // show/hide must not rebuild the trigger mid-scroll). Nothing to override.
-
     let ctx = gsap.context(() => {
       
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
           start: "top top",
+          end: "+=2100%",
           scrub: true,
-          ...(isMobile()
-            ? {
-                // Do not GSAP-pin on mobile. position:fixed pins swallow iOS
-                // touch-scroll (the page appears stuck). CSS sticky on the
-                // inner section keeps the hero in view while this trigger
-                // scrubs, and reverse from the CTA re-sticks without a gap.
-                pin: false,
-                // Exactly the distance the sticky section travels inside the track
-                // (track height - section height), so scrub progress 1 coincides
-                // with the sticky release regardless of URL-bar height changes.
-                end: () => "+=" + Math.max(1, containerRef.current.offsetHeight - containerRef.current.firstElementChild.offsetHeight),
-                onUpdate: () => render(),
-                onRefresh: () => restoreAndRender(),
-                onEnter: () => restoreAndRender(),
-                onEnterBack: () => restoreAndRender(),
-                onLeaveBack: () => restoreAndRender(),
-              }
-            : {
-                end: "+=2100%",
-                pin: true,
-                pinSpacing: true,
-              }),
+          pin: true,
+          ...(isMobile() ? {
+            onUpdate: () => render(),
+            onRefresh: () => restoreAndRender(),
+            onEnter: () => restoreAndRender(),
+            onEnterBack: () => restoreAndRender(),
+            onLeaveBack: () => restoreAndRender(),
+          } : {}),
         }
       });
 
-      // INITIAL SHAPE OPENING (Runs on load) - same circular reveal on desktop and mobile
+      // INITIAL SHAPE OPENING (Runs on load)
       gsap.set('.services-hero-intro', { opacity: 0, scale: 1.05 });
       gsap.set('.hero-canvas-wrapper', { clipPath: 'circle(15% at 50% 50%)' }); // Elegant circular opening
-
+      
       const openingTl = gsap.timeline({ delay: 0.2 });
       openingTl.to('.hero-canvas-wrapper', {
         clipPath: 'circle(150% at 50% 50%)',
         duration: 2.0,
         ease: "power3.inOut",
-        // Mobile only: circle(150%) already shows the whole frame, so drop the mask
-        // once the reveal ends. A permanent clip-path on a layer that holds a
-        // continuously repainted canvas makes iOS Safari stop repainting it.
         ...(isMobile()
           ? { onComplete: () => gsap.set('.hero-canvas-wrapper', { clearProps: 'clipPath,webkitClipPath' }) }
           : {})
@@ -367,11 +366,19 @@ export default function Services() {
       // INITIAL SCROLL EXIT (Split OUR SERVICES physically off-screen)
       // We use a massive x translation so they physically leave the viewport.
       // We delay the opacity fade so the movement is the primary effect.
-      tl.to('.split-our', { x: -2000, duration: 0.8, ease: "power2.in" }, 0);
-      tl.to('.split-services', { x: 2000, duration: 0.8, ease: "power2.in" }, 0);
-      tl.to('.split-our', { opacity: 0, duration: 0.2 }, 0.6);
-      tl.to('.split-services', { opacity: 0, duration: 0.2 }, 0.6);
-      tl.to('.services-hero-intro-inner', { opacity: 0, duration: 0.2 }, 0.6);
+      if (isMobile()) {
+        tl.fromTo('.split-our', { x: 0 }, { x: -2000, duration: 0.8, ease: "power2.in", immediateRender: false }, 0);
+        tl.fromTo('.split-services', { x: 0 }, { x: 2000, duration: 0.8, ease: "power2.in", immediateRender: false }, 0);
+        tl.fromTo('.split-our', { opacity: 1 }, { opacity: 0, duration: 0.2, immediateRender: false }, 0.6);
+        tl.fromTo('.split-services', { opacity: 1 }, { opacity: 0, duration: 0.2, immediateRender: false }, 0.6);
+        tl.fromTo('.services-hero-intro-inner', { opacity: 1 }, { opacity: 0, duration: 0.2, immediateRender: false }, 0.6);
+      } else {
+        tl.to('.split-our', { x: -2000, duration: 0.8, ease: "power2.in" }, 0);
+        tl.to('.split-services', { x: 2000, duration: 0.8, ease: "power2.in" }, 0);
+        tl.to('.split-our', { opacity: 0, duration: 0.2 }, 0.6);
+        tl.to('.split-services', { opacity: 0, duration: 0.2 }, 0.6);
+        tl.to('.services-hero-intro-inner', { opacity: 0, duration: 0.2 }, 0.6);
+      }
 
       // ==========================================
       // CHAPTER 1: Frames 1 -> 300 (Services 1-6)
@@ -380,7 +387,11 @@ export default function Services() {
       // VIDEO TIMELINE PART 1 (Frames 1 -> 149)
       // 149 frames at 12.5 frames/unit = 11.92 units
       tl.addLabel("chap1_vid", 0);
-      tl.to(scrollObj, { frame: 149, ease: "none", duration: 11.92, onUpdate: () => render() }, "chap1_vid");
+      if (isMobile()) {
+        tl.fromTo(scrollObj, { frame: 1 }, { frame: 149, ease: "none", duration: 11.92, onUpdate: () => render() }, "chap1_vid");
+      } else {
+        tl.to(scrollObj, { frame: 149, ease: "none", duration: 11.92, onUpdate: () => render() }, "chap1_vid");
+      }
 
       // BLOCK 1 & 2 COMBINED: DTCP (Service 1) & CMDA (Service 2)
       tl.addLabel("txt1", 0.8); // Shifted later
@@ -429,7 +440,11 @@ export default function Services() {
       
       // VIDEO TIMELINE PART 2 (Frames 150 -> 300)
       // 150 frames at 12.5 frames/unit = 12.0 units
-      tl.to(scrollObj, { frame: frameCount, ease: "none", duration: 12.0, onUpdate: () => render() }, "chap2_vid1");
+      if (isMobile()) {
+        tl.fromTo(scrollObj, { frame: 150 }, { frame: frameCount, ease: "none", duration: 12.0, immediateRender: false, onUpdate: () => render() }, "chap2_vid1");
+      } else {
+        tl.to(scrollObj, { frame: frameCount, ease: "none", duration: 12.0, onUpdate: () => render() }, "chap2_vid1");
+      }
 
 
       // SERVICE 11: PWD
@@ -489,6 +504,7 @@ export default function Services() {
     }, containerRef);
 
     return () => {
+      disposed = true;
       window.removeEventListener('resize', handleResize);
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('pageshow', onPageShow);
@@ -501,16 +517,12 @@ export default function Services() {
   return (
     <div className="bg-[#050505] min-h-screen font-body text-white selection:bg-brand-gold selection:text-brand-navy">
       
-      {/* 1. CINEMATIC HERO SECTION
-          Desktop: GSAP pin + 2100% spacer (unchanged).
-          Mobile: tall track + CSS sticky so iOS can native-scroll, frames
-          still scrub, and reverse from the CTA does not leave empty screens. */}
-      <div ref={containerRef} className="relative w-full h-[2200svh] md:h-auto">
-      <section className="sticky top-0 md:relative z-[1] w-full h-[100svh] md:h-[100vh] bg-black overflow-hidden flex flex-col justify-center border-b border-white/5 touch-pan-y">
+      {/* 1. CINEMATIC HERO SECTION (Pinned) */}
+      <section ref={containerRef} className="relative w-full h-[100vh] bg-black overflow-hidden flex flex-col justify-center border-b border-white/5">
         
         {/* Canvas Video Background */}
-        <div className="hero-canvas-wrapper absolute inset-0 w-full h-full overflow-hidden md:transition-all md:duration-300">
-          <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block object-cover" />
+        <div className="hero-canvas-wrapper absolute inset-0 w-full h-full overflow-hidden md:transition-all md:duration-300 max-md:pointer-events-none">
+          <canvas ref={canvasRef} className="absolute inset-0 w-full h-full block object-cover max-md:pointer-events-none" />
         </div>
         
         {/* Cinematic Dark Overlay - Dynamic via GSAP */}
@@ -645,7 +657,6 @@ export default function Services() {
         </div>
 
       </section>
-      </div>
 
 
       {/* 4. FINAL CLOSING CTA */}
