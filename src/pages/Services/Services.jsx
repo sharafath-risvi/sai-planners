@@ -266,15 +266,9 @@ export default function Services() {
     canvas.addEventListener('contextrestored', onContextRestored);
 
     if (isMobile()) {
-      // iOS URL-bar show/hide fires resize and recalculates pinSpacing (2100%),
-      // which detaches the pinned canvas from the spacer on reverse scroll.
+      // iOS URL-bar show/hide fires resize and recalculates pinSpacing,
+      // which detaches a GSAP pin from its spacer on reverse scroll.
       ScrollTrigger.config({ ignoreMobileResize: true });
-      // overflow-x:hidden on html/body turns them into a containing block, so
-      // position:fixed pins never stick — the hero sits at the top of the 2100%
-      // spacer and reverse scroll is empty navy screens. `clip` still blocks
-      // horizontal overflow without breaking ScrollTrigger pinning.
-      document.documentElement.style.setProperty('overflow-x', 'clip');
-      document.body.style.setProperty('overflow-x', 'clip');
     }
 
     let ctx = gsap.context(() => {
@@ -283,20 +277,26 @@ export default function Services() {
         scrollTrigger: {
           trigger: containerRef.current,
           start: "top top",
-          end: "+=2100%",
           scrub: true,
-          pin: true,
-          pinSpacing: true,
-          ...(isMobile() ? {
-            pinType: "fixed",
-            anticipatePin: 1,
-            invalidateOnRefresh: false,
-            onUpdate: () => render(),
-            onRefresh: () => restoreAndRender(),
-            onEnter: () => restoreAndRender(),
-            onEnterBack: () => restoreAndRender(),
-            onLeaveBack: () => restoreAndRender(),
-          } : {}),
+          ...(isMobile()
+            ? {
+                // Do not GSAP-pin on mobile. position:fixed pins swallow iOS
+                // touch-scroll (the page appears stuck). CSS sticky on the
+                // inner section keeps the hero in view while this trigger
+                // scrubs, and reverse from the CTA re-sticks without a gap.
+                pin: false,
+                end: "bottom bottom",
+                onUpdate: () => render(),
+                onRefresh: () => restoreAndRender(),
+                onEnter: () => restoreAndRender(),
+                onEnterBack: () => restoreAndRender(),
+                onLeaveBack: () => restoreAndRender(),
+              }
+            : {
+                end: "+=2100%",
+                pin: true,
+                pinSpacing: true,
+              }),
         }
       });
 
@@ -457,8 +457,6 @@ export default function Services() {
       canvas.removeEventListener('contextrestored', onContextRestored);
       if (isMobile()) {
         ScrollTrigger.config({ ignoreMobileResize: false });
-        document.documentElement.style.removeProperty('overflow-x');
-        document.body.style.removeProperty('overflow-x');
       }
       ctx.revert();
     };
@@ -467,11 +465,12 @@ export default function Services() {
   return (
     <div className="bg-[#050505] min-h-screen font-body text-white selection:bg-brand-gold selection:text-brand-navy">
       
-      {/* 1. CINEMATIC HERO SECTION (Pinned)
-          Outer wrapper is the pin target so overflow-hidden on the inner section
-          cannot break ScrollTrigger pinning on iOS reverse-scroll. */}
-      <div ref={containerRef} className="relative w-full">
-      <section className="relative z-[1] w-full h-[100svh] md:h-[100vh] bg-black overflow-hidden flex flex-col justify-center border-b border-white/5">
+      {/* 1. CINEMATIC HERO SECTION
+          Desktop: GSAP pin + 2100% spacer (unchanged).
+          Mobile: tall track + CSS sticky so iOS can native-scroll, frames
+          still scrub, and reverse from the CTA does not leave empty screens. */}
+      <div ref={containerRef} className="relative w-full h-[2200svh] md:h-auto">
+      <section className="sticky top-0 md:relative z-[1] w-full h-[100svh] md:h-[100vh] bg-black overflow-hidden flex flex-col justify-center border-b border-white/5 touch-pan-y">
         
         {/* Canvas Video Background */}
         <div className="hero-canvas-wrapper absolute inset-0 w-full h-full overflow-hidden md:transition-all md:duration-300 max-md:![clip-path:none]">
