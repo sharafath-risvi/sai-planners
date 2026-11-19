@@ -245,34 +245,13 @@ export default function Services() {
     canvas.addEventListener('contextlost', onContextLost);
     canvas.addEventListener('contextrestored', onContextRestored);
 
-    // Mobile: Lenis smooth-scroll and ScrollTrigger must share one scroll position.
-    // Without scrollerProxy, reverse scroll from the CTA desyncs — the scrub
-    // timeline runs inside the pin spacer while the pinned hero is not fixed,
-    // which produces empty black/white gaps until a pause forces a refresh.
-    let lenisScrollHandler = null;
-    if (isMobile() && window.lenis) {
-      const lenis = window.lenis;
-      ScrollTrigger.scrollerProxy(document.documentElement, {
-        scrollTop(value) {
-          if (arguments.length) {
-            lenis.scrollTo(value, { immediate: true });
-          }
-          return lenis.scroll;
-        },
-        getBoundingClientRect() {
-          return {
-            top: 0,
-            left: 0,
-            width: window.innerWidth,
-            height: window.innerHeight,
-          };
-        },
-      });
-      lenisScrollHandler = () => {
-        ScrollTrigger.update();
-        render();
-      };
-      lenis.on('scroll', lenisScrollHandler);
+    let heroScrollTrigger = null;
+    const syncScrollProgress = () => {
+      if (disposed || !heroScrollTrigger) return;
+      render();
+    };
+    if (isMobile()) {
+      window.addEventListener('scroll', syncScrollProgress, { passive: true });
     }
 
     let ctx = gsap.context(() => {
@@ -287,9 +266,9 @@ export default function Services() {
           pinSpacing: true,
           onUpdate: () => render(),
           ...(isMobile() ? {
+            pinReparent: true,
             anticipatePin: 1,
             invalidateOnRefresh: false,
-            fastScrollEnd: true,
             onRefresh: () => restoreAndRender(),
             onEnter: () => restoreAndRender(),
             onEnterBack: () => {
@@ -301,28 +280,36 @@ export default function Services() {
           } : {}),
         }
       });
+      heroScrollTrigger = tl.scrollTrigger;
 
-      // INITIAL SHAPE OPENING (Runs on load) — desktop only; mobile keeps clip off
-      // so a killed tween cannot freeze at circle(15%) during reverse scroll.
+      // INITIAL SHAPE OPENING (Runs on load)
+      gsap.set('.services-hero-intro', { opacity: 0, scale: 1.05 });
+      gsap.set('.hero-canvas-wrapper', { clipPath: 'circle(15% at 50% 50%)' });
+      
+      const openingTl = gsap.timeline({ delay: 0.2 });
+      openingTl.to('.hero-canvas-wrapper', {
+        clipPath: 'circle(150% at 50% 50%)',
+        duration: 2.0,
+        ease: "power3.inOut",
+        ...(isMobile()
+          ? {
+              onComplete: () => {
+                gsap.set('.hero-canvas-wrapper', { clearProps: 'clipPath,webkitClipPath' });
+              },
+            }
+          : {}),
+      })
+      .to('.services-hero-intro', {
+        opacity: 1,
+        scale: 1,
+        duration: 1.5,
+        ease: "power2.out"
+      }, "-=0.5");
+
       if (isMobile()) {
-        gsap.set('.hero-canvas-wrapper', { clipPath: 'none', webkitClipPath: 'none' });
-        gsap.set('.services-hero-intro', { opacity: 1, scale: 1 });
-      } else {
-        gsap.set('.services-hero-intro', { opacity: 0, scale: 1.05 });
-        gsap.set('.hero-canvas-wrapper', { clipPath: 'circle(15% at 50% 50%)' });
-        
-        const openingTl = gsap.timeline({ delay: 0.2 });
-        openingTl.to('.hero-canvas-wrapper', {
-          clipPath: 'circle(150% at 50% 50%)',
-          duration: 2.0,
-          ease: "power3.inOut"
-        })
-        .to('.services-hero-intro', {
-          opacity: 1,
-          scale: 1,
-          duration: 1.5,
-          ease: "power2.out"
-        }, "-=0.5");
+        gsap.delayedCall(2.4, () => {
+          gsap.set('.hero-canvas-wrapper', { clearProps: 'clipPath,webkitClipPath' });
+        });
       }
 
       // INITIAL SCROLL EXIT (Split OUR SERVICES physically off-screen)
@@ -479,19 +466,13 @@ export default function Services() {
 
     }, containerRef);
 
-    if (isMobile()) {
-      ScrollTrigger.refresh();
-    }
-
     return () => {
       disposed = true;
       if (isMobile()) {
         ScrollTrigger.config({ ignoreMobileResize: false });
-        if (window.lenis && lenisScrollHandler) {
-          window.lenis.off('scroll', lenisScrollHandler);
-        }
-        ScrollTrigger.scrollerProxy(document.documentElement, {});
+        window.removeEventListener('scroll', syncScrollProgress);
       }
+      heroScrollTrigger = null;
       window.removeEventListener('resize', handleResize);
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('pageshow', onPageShow);
