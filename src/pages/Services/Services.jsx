@@ -106,20 +106,91 @@ export default function Services() {
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
-    const context = canvas.getContext('2d', { alpha: false });
-    const images = [];
-    const scrollObj = { frame: 1 };
+    if (!canvas) return;
 
-    // Preload the dynamically detected combined sequence
-    for (let i = 0; i < frameCount; i++) {
-      const img = new Image();
-      img.src = allFrameUrls[i];
-      images.push(img);
-    }
+    const mobileMq = window.matchMedia('(max-width: 767px)');
+    const isMobile = () => mobileMq.matches;
+
+    let context = canvas.getContext('2d', { alpha: false });
+    const images = new Array(frameCount);
+    const scrollObj = { frame: 1 };
+    let lastDrawableImg = null;
+
+    const isDrawable = (img) => !!(img && img.complete && img.naturalWidth > 0);
+
+    const ensureImage = (index) => {
+      if (index < 0 || index >= frameCount) return null;
+      let img = images[index];
+      if (!img) {
+        img = new Image();
+        img.decoding = 'async';
+        images[index] = img;
+      }
+      const url = allFrameUrls[index];
+      if (!url) return img;
+      if (!img.getAttribute('src')) {
+        img.src = url;
+      }
+      return img;
+    };
+
+    // Re-decode a single frame from HTTP cache if iOS discarded its bitmap.
+    const reviveImage = (index) => {
+      const img = images[index];
+      const url = allFrameUrls[index];
+      if (!img || !url || img._reviving) return;
+      img._reviving = true;
+      const finish = () => {
+        img._reviving = false;
+        if (isDrawable(img)) render();
+      };
+      img.onload = finish;
+      img.onerror = () => { img._reviving = false; };
+      img.removeAttribute('src');
+      img.src = url;
+    };
+
+    const MOBILE_WARM = 18;
+    const warmAround = (index) => {
+      if (!isMobile()) return;
+      const start = Math.max(0, index - MOBILE_WARM);
+      const end = Math.min(frameCount - 1, index + MOBILE_WARM);
+      for (let i = start; i <= end; i++) ensureImage(i);
+    };
+
+    const findDrawable = (index) => {
+      if (isDrawable(images[index])) return images[index];
+      for (let d = 1; d <= 32; d++) {
+        if (isDrawable(images[index - d])) return images[index - d];
+        if (isDrawable(images[index + d])) return images[index + d];
+      }
+      if (isDrawable(lastDrawableImg)) return lastDrawableImg;
+      return null;
+    };
+
+    const syncCanvasSize = (force = false) => {
+      const w = Math.max(1, window.innerWidth);
+      const h = Math.max(1, window.innerHeight);
+      if (force || canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
+      }
+    };
 
     const render = () => {
-      const img = images[Math.floor(scrollObj.frame) - 1];
-      if (!img || !img.complete || img.naturalWidth === 0) return;
+      const index = Math.max(0, Math.min(frameCount - 1, Math.floor(scrollObj.frame) - 1));
+      ensureImage(index);
+      if (isMobile()) warmAround(index);
+
+      const img = findDrawable(index);
+      if (!isDrawable(img)) {
+        if (isMobile()) reviveImage(index);
+        return; // Do not clearRect — keeps the last painted frame instead of a blank screen
+      }
+
+      lastDrawableImg = img;
+      if (canvas.width < 2 || canvas.height < 2) syncCanvasSize(true);
+
       const cw = canvas.width;
       const ch = canvas.height;
       const iw = img.naturalWidth;
@@ -127,26 +198,73 @@ export default function Services() {
       const ratio = Math.max(cw / iw, ch / ih);
       const cx = (cw - iw * ratio) / 2;
       const cy = (ch - ih * ratio) / 2;
-      
-      // Crucial: Clear the canvas before drawing to prevent alpha-stacking (darkness/ghosting) 
+
+      // Crucial: Clear the canvas before drawing to prevent alpha-stacking (darkness/ghosting)
       // from semi-transparent PNG frames during scroll.
       context.clearRect(0, 0, cw, ch);
-      context.drawImage(img, 0, 0, iw, ih, cx, cy, iw * ratio, ih * ratio);
+      try {
+        context.drawImage(img, 0, 0, iw, ih, cx, cy, iw * ratio, ih * ratio);
+      } catch {
+        if (isMobile()) reviveImage(index);
+      }
     };
 
-    if (images[0]?.complete) {
+    const restoreAndRender = () => {
+      if (isMobile()) {
+        // iOS discards the 2D backing store when the pinned canvas leaves the viewport.
+        // Re-assigning width/height recreates it so frames can paint again on scroll-back.
+        syncCanvasSize(true);
+        context = canvas.getContext('2d', { alpha: false }) || context;
+      }
+      render();
+      if (isMobile()) {
+        requestAnimationFrame(() => {
+          syncCanvasSize(canvas.width < 2 || canvas.height < 2);
+          render();
+        });
+      }
+    };
+
+    // Desktop: preload the full sequence (existing behaviour).
+    // Mobile: load a window around the current frame so Safari does not evict the canvas bitmap.
+    if (!isMobile()) {
+      for (let i = 0; i < frameCount; i++) ensureImage(i);
+    } else {
+      warmAround(0);
+    }
+
+    if (images[0] && isDrawable(images[0])) {
       render();
     } else if (images[0]) {
       images[0].onload = render;
     }
 
     const handleResize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      syncCanvasSize(true);
       render();
     };
     window.addEventListener('resize', handleResize);
     handleResize();
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') restoreAndRender();
+    };
+    const onPageShow = () => restoreAndRender();
+    const onContextLost = (event) => event.preventDefault();
+    const onContextRestored = () => {
+      context = canvas.getContext('2d', { alpha: false }) || context;
+      restoreAndRender();
+    };
+
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pageshow', onPageShow);
+    canvas.addEventListener('contextlost', onContextLost);
+    canvas.addEventListener('contextrestored', onContextRestored);
+
+    const visualViewport = window.visualViewport;
+    if (isMobile() && visualViewport) {
+      visualViewport.addEventListener('resize', handleResize);
+    }
 
     let ctx = gsap.context(() => {
       
@@ -157,6 +275,14 @@ export default function Services() {
           end: "+=2100%",
           scrub: true,
           pin: true,
+          ...(isMobile() ? {
+            invalidateOnRefresh: true,
+            onUpdate: () => render(),
+            onRefresh: () => restoreAndRender(),
+            onEnter: () => restoreAndRender(),
+            onEnterBack: () => restoreAndRender(),
+            onLeaveBack: () => restoreAndRender(),
+          } : {}),
         }
       });
 
@@ -303,6 +429,13 @@ export default function Services() {
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pageshow', onPageShow);
+      canvas.removeEventListener('contextlost', onContextLost);
+      canvas.removeEventListener('contextrestored', onContextRestored);
+      if (visualViewport) {
+        visualViewport.removeEventListener('resize', handleResize);
+      }
       ctx.revert();
     };
   }, []);
