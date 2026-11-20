@@ -118,6 +118,16 @@ export default function Services() {
     let lastDrawableImg = null;
     let lastMobileWidth = 0;
     let lastMobileHeight = 0;
+    // Mobile only: true when the canvas bitmap may have been wiped/reset and must be repainted
+    // even if the frame to show has not changed.
+    let canvasDirty = true;
+    let lastWindowIndex = -1;
+
+    // Mobile only: keep a sliding window of frames instead of 450 full-size 1920x1080 images.
+    // Holding the whole sequence is ~3.7 GB decoded; iOS Safari starts purging/re-decoding
+    // bitmaps and stalls the main thread, which shows up as blank screens near the end.
+    const MOBILE_KEEP = 40;
+    const MOBILE_DECODE_AHEAD = 6;
 
     const isDrawable = (img) => !!(img && img.complete && img.naturalWidth > 0);
 
@@ -139,6 +149,39 @@ export default function Services() {
       return img;
     };
 
+    const releaseImage = (i) => {
+      const img = images[i];
+      if (!img) return;
+      // Never free the frame that is currently on screen.
+      if (img === lastDrawableImg) return;
+      img.onload = null;
+      img.onerror = null;
+      img.removeAttribute('src');
+      images[i] = undefined;
+    };
+
+    // Request nearest frames first, pre-decode the next few off the main thread,
+    // and release everything outside the window.
+    const manageMobileWindow = (index) => {
+      if (index === lastWindowIndex) return;
+      lastWindowIndex = index;
+      startImageLoad(index);
+      for (let d = 1; d <= MOBILE_KEEP; d++) {
+        startImageLoad(index + d);
+        startImageLoad(index - d);
+      }
+      for (let i = 0; i < frameCount; i++) {
+        if (images[i] && Math.abs(i - index) > MOBILE_KEEP) releaseImage(i);
+      }
+      for (let d = -2; d <= MOBILE_DECODE_AHEAD; d++) {
+        const img = images[index + d];
+        if (img && !img._decodeQueued && isDrawable(img) && typeof img.decode === 'function') {
+          img._decodeQueued = true;
+          img.decode().catch(() => {});
+        }
+      }
+    };
+
     const findNearestDrawable = (index) => {
       if (isDrawable(images[index])) return images[index];
       for (let d = 1; d < frameCount; d++) {
@@ -151,9 +194,13 @@ export default function Services() {
     };
 
     const syncCanvasSize = (force = false) => {
-      const w = Math.max(1, window.innerWidth);
-      const h = Math.max(1, window.innerHeight);
       if (isMobile()) {
+        // Size the bitmap from the box the canvas is actually drawn into, not from
+        // window.innerHeight (which changes with the Safari toolbar), so the bitmap
+        // always matches the CSS box and cover-fits it exactly.
+        const host = canvas.parentElement;
+        const w = Math.max(1, (host && host.clientWidth) || window.innerWidth);
+        const h = Math.max(1, (host && host.clientHeight) || window.innerHeight);
         const widthChanged = w !== lastMobileWidth;
         const majorHeightChanged = !lastMobileHeight || Math.abs(h - lastMobileHeight) > lastMobileHeight * 0.25;
         if (force || canvas.width < 2 || canvas.height < 2 || widthChanged || majorHeightChanged) {
@@ -161,8 +208,13 @@ export default function Services() {
           canvas.height = h;
           lastMobileWidth = w;
           lastMobileHeight = h;
+          canvasDirty = true;
         }
-      } else if (force || canvas.width !== w || canvas.height !== h) {
+        return;
+      }
+      const w = Math.max(1, window.innerWidth);
+      const h = Math.max(1, window.innerHeight);
+      if (force || canvas.width !== w || canvas.height !== h) {
         canvas.width = w;
         canvas.height = h;
       }
@@ -195,12 +247,25 @@ export default function Services() {
         return;
       }
 
-      startImageLoad(index);
+      manageMobileWindow(index);
       const img = findNearestDrawable(index);
       if (!isDrawable(img)) return;
-      renderedIndex = index;
-      lastDrawableImg = img;
-      paintImage(img);
+      // Same frame already on the canvas: do not repaint. scrub fires on every scroll
+      // event, and during the final blurred stretch the frame never changes, so
+      // repainting would force the full-screen backdrop-blur to recompute for nothing.
+      if (img === lastDrawableImg && !canvasDirty) return;
+      try {
+        paintImage(img);
+        canvasDirty = false;
+        renderedIndex = index;
+        lastDrawableImg = img;
+      } catch {
+        // Bitmap was discarded by the browser: drop it and fetch it again.
+        const bad = images.indexOf(img);
+        if (bad >= 0) images[bad] = undefined;
+        if (lastDrawableImg === img) lastDrawableImg = null;
+        startImageLoad(index);
+      }
     };
 
     const restoreAndRender = () => {
@@ -208,16 +273,20 @@ export default function Services() {
       if (isMobile()) {
         syncCanvasSize(false);
         context = canvas.getContext('2d', { alpha: false }) || context;
-        if (isDrawable(lastDrawableImg)) {
-          try { paintImage(lastDrawableImg); } catch { /* render() below will recover */ }
-        }
+        // The bitmap may have been dropped (tab restore, layer rebuild): force one repaint.
+        canvasDirty = true;
       }
       render();
     };
 
-    // Preload all frames on mount
-    for (let i = 0; i < frameCount; i++) {
-      startImageLoad(i);
+    if (isMobile()) {
+      // Mobile: windowed loading (see manageMobileWindow).
+      manageMobileWindow(0);
+    } else {
+      // Desktop: preload all frames on mount (unchanged).
+      for (let i = 0; i < frameCount; i++) {
+        startImageLoad(i);
+      }
     }
 
     const handleResize = () => {
@@ -245,15 +314,6 @@ export default function Services() {
     canvas.addEventListener('contextlost', onContextLost);
     canvas.addEventListener('contextrestored', onContextRestored);
 
-    let heroScrollTrigger = null;
-    const syncScrollProgress = () => {
-      if (disposed || !heroScrollTrigger) return;
-      render();
-    };
-    if (isMobile()) {
-      window.addEventListener('scroll', syncScrollProgress, { passive: true });
-    }
-
     let ctx = gsap.context(() => {
       
       const tl = gsap.timeline({
@@ -266,7 +326,10 @@ export default function Services() {
           pinSpacing: true,
           onUpdate: () => render(),
           ...(isMobile() ? {
-            pinReparent: true,
+            // No pinReparent: no ancestor of the hero has a transform/filter that would
+            // break position:fixed, and reparenting moves the canvas into <body> at the
+            // exact pin boundaries (start and the hand-off to the CTA), which makes iOS
+            // rebuild the canvas layer and drop its bitmap.
             anticipatePin: 1,
             invalidateOnRefresh: false,
             onRefresh: () => restoreAndRender(),
@@ -280,7 +343,6 @@ export default function Services() {
           } : {}),
         }
       });
-      heroScrollTrigger = tl.scrollTrigger;
 
       // INITIAL SHAPE OPENING (Runs on load)
       gsap.set('.services-hero-intro', { opacity: 0, scale: 1.05 });
@@ -470,14 +532,17 @@ export default function Services() {
       disposed = true;
       if (isMobile()) {
         ScrollTrigger.config({ ignoreMobileResize: false });
-        window.removeEventListener('scroll', syncScrollProgress);
       }
-      heroScrollTrigger = null;
       window.removeEventListener('resize', handleResize);
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('pageshow', onPageShow);
       canvas.removeEventListener('contextlost', onContextLost);
       canvas.removeEventListener('contextrestored', onContextRestored);
+      if (isMobile()) {
+        // Free the decoded/queued frames of the window when leaving the page.
+        lastDrawableImg = null;
+        for (let i = 0; i < frameCount; i++) releaseImage(i);
+      }
       ctx.revert();
     };
   }, []);
@@ -489,7 +554,7 @@ export default function Services() {
           Pin target is the outer wrapper so overflow-hidden on the inner
           section cannot break iOS fixed pinning on reverse scroll from CTA. */}
       <div ref={containerRef} className="relative w-full">
-      <section className="relative w-full h-[100svh] md:h-[100vh] bg-black overflow-hidden flex flex-col justify-center border-b border-white/5">
+      <section className="relative w-full h-[100lvh] md:h-[100vh] bg-black overflow-hidden flex flex-col justify-center md:border-b border-white/5">
         
         {/* Canvas Video Background */}
         <div className="hero-canvas-wrapper absolute inset-0 w-full h-full overflow-hidden md:transition-all md:duration-300 max-md:pointer-events-none max-md:![clip-path:none]">
